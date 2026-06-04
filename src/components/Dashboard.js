@@ -6,6 +6,7 @@ import VacationsTab from './VacationsTab';
 import UsersTab from './UsersTab';
 import InternalReviewTab from './InternalReviewTab';
 import StatsTab from './StatsTab';
+import MissingNumbersTab from './MissingNumbersTab';
 import * as API from '@/lib/api';
 
 export default function Dashboard({ user, patients, exits, onLogout, hasPerm, loadPatients, loadExits, loadAll }) {
@@ -20,6 +21,7 @@ export default function Dashboard({ user, patients, exits, onLogout, hasPerm, lo
     { id: 'stats', label: 'الإحصائيات', check: () => hasPerm('statistics') },
     { id: 'vacations', label: 'الإجازات', check: () => hasPerm('vacations') },
     { id: 'exits', label: 'سجل الخروج', check: () => hasPerm('checkout_log') },
+    { id: 'missingNumbers', label: 'الأرقام الناقصة', check: () => hasPerm('missing_numbers') },
     { id: 'internalReview', label: 'مراجعة الباطنة', check: () => hasPerm('internal_review') },
     { id: 'users', label: 'المستخدمين', check: () => hasPerm('users') },
   ].filter(t => t.check());
@@ -53,7 +55,10 @@ export default function Dashboard({ user, patients, exits, onLogout, hasPerm, lo
       case 'exits':
         return <ExitsTab exits={exits} hasPerm={hasPerm} loadPatients={loadPatients} loadExits={loadExits} />;
       case 'internalReview':
-        return <InternalReviewTab patients={patients} hasPerm={hasPerm} loadPatients={loadPatients} />;
+        return <InternalReviewTab patients={patients} hasPerm={hasPerm} loadPatients={loadPatients}
+          onEditPatient={(id) => { localStorage.setItem('editPatientNext', id); setActiveTab('patients'); }} />;
+      case 'missingNumbers':
+        return <MissingNumbersTab patients={patients} />;
       case 'users':
         return <UsersTab user={user} hasPerm={hasPerm} />;
       default:

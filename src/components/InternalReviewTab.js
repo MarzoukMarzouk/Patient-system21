@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import * as API from '@/lib/api';
 
-export default function InternalReviewTab({ patients, hasPerm, loadPatients }) {
+export default function InternalReviewTab({ patients, hasPerm, loadPatients, onEditPatient }) {
   const internalPatients = useMemo(() => {
     return patients
       .filter(p => (p.internalPatient || '').trim() === 'نعم')
@@ -61,7 +61,7 @@ export default function InternalReviewTab({ patients, hasPerm, loadPatients }) {
                 <td>
                   {hasPerm('internal_review', 'actions') && (
                     <button className="btn btn-sm btn-outline-secondary"
-                      onClick={() => alert('تعديل المريض: ' + p.id)}>
+                      onClick={() => onEditPatient(p.id)}>
                       <i className="bi bi-pencil"></i>
                     </button>
                   )}

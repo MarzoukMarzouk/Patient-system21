@@ -23,6 +23,15 @@ export default function PatientsTab({ patients, hasPerm, loadPatients, loadExits
   const displayList = filtered || patients;
 
   useEffect(() => {
+    const pendingId = localStorage.getItem('editPatientNext');
+    if (pendingId) {
+      localStorage.removeItem('editPatientNext');
+      const p = patients.find(x => x.id === pendingId);
+      if (p) { setEditId(pendingId); setShowModal(true); }
+    }
+  }, [patients]);
+
+  useEffect(() => {
     if (filter) {
       setFiltered(patients.filter(p => (p[filter.key] || '').includes(filter.value)));
     } else {
