@@ -14,6 +14,7 @@ export default function Dashboard({ user, patients, exits, onLogout, hasPerm, lo
   const [cpShow, setCpShow] = useState(false);
   const [cpForm, setCpForm] = useState({ old: '', newPw: '', confirm: '' });
   const [cpError, setCpError] = useState('');
+  const [cpInfo, setCpInfo] = useState('');
 
   const tabs = [
     { id: 'patients', label: 'المرضى', check: () => hasPerm('patients') },
@@ -26,17 +27,26 @@ export default function Dashboard({ user, patients, exits, onLogout, hasPerm, lo
     { id: 'users', label: 'المستخدمين', check: () => hasPerm('users') },
   ].filter(t => t.check());
 
+  // تأكد من أن التبويب النشط ضمن المتاحة
+  useEffect(() => {
+    if (!tabs.find(t => t.id === activeTab) && tabs.length > 0) {
+      setActiveTab(tabs[0].id);
+    }
+  }, [tabs, activeTab]);
+
   useEffect(() => { loadAll(); }, [loadAll]);
 
   const handleChangePassword = async () => {
     setCpError('');
+    setCpInfo('');
     if (!cpForm.old || !cpForm.newPw) { setCpError('يرجى ملء جميع الحقول'); return; }
     if (cpForm.newPw !== cpForm.confirm) { setCpError('كلمة المرور الجديدة غير متطابقة'); return; }
     if (cpForm.newPw.length < 4) { setCpError('كلمة المرور يجب أن تكون 4 أحرف على الأقل'); return; }
     try {
       await API.updatePassword(user.id, cpForm.old, cpForm.newPw);
-      setCpShow(false);
-      alert('تم تغيير كلمة المرور بنجاح');
+      setCpInfo('تم تغيير كلمة المرور بنجاح ✓');
+      setCpForm({ old: '', newPw: '', confirm: '' });
+      setTimeout(() => { setCpShow(false); setCpInfo(''); }, 1500);
     } catch (err) {
       setCpError(err.message);
     }
@@ -51,7 +61,8 @@ export default function Dashboard({ user, patients, exits, onLogout, hasPerm, lo
       case 'stats':
         return <StatsTab patients={patients} hasPerm={hasPerm} />;
       case 'vacations':
-        return <VacationsTab patients={patients} hasPerm={hasPerm} />;
+        return <VacationsTab patients={patients} hasPerm={hasPerm}
+          onEditPatient={(id) => { localStorage.setItem('editPatientNext', id); setActiveTab('patients'); }} />;
       case 'exits':
         return <ExitsTab exits={exits} hasPerm={hasPerm} loadPatients={loadPatients} loadExits={loadExits} />;
       case 'internalReview':
@@ -72,8 +83,13 @@ export default function Dashboard({ user, patients, exits, onLogout, hasPerm, lo
         <div className="container-fluid">
           <span className="navbar-brand mb-0 h6">نظام إدارة المرضى</span>
           <div className="d-flex align-items-center gap-2">
-            <span className="navbar-text me-2 small d-none d-sm-inline">مرحباً، {user.name}</span>
-            <button className="btn btn-outline-light btn-sm" onClick={() => setCpShow(true)}>
+            <span className="navbar-text me-2 small d-none d-sm-inline">
+              مرحباً، {user.name}
+              {user.position === 'مدير' && <span className="badge bg-warning text-dark ms-1">مدير</span>}
+            </span>
+            <button className="btn btn-outline-light btn-sm" onClick={() => {
+              setCpShow(true); setCpError(''); setCpInfo(''); setCpForm({ old: '', newPw: '', confirm: '' });
+            }} title="تغيير كلمة المرور">
               <i className="bi bi-key"></i>
             </button>
             <button className="btn btn-outline-light btn-sm" onClick={onLogout}>خروج</button>
@@ -81,7 +97,7 @@ export default function Dashboard({ user, patients, exits, onLogout, hasPerm, lo
         </div>
       </nav>
       <div className="container-fluid px-2 mt-2">
-        <ul className="nav nav-tabs mb-2">
+        <ul className="nav nav-tabs mb-2 flex-wrap">
           {tabs.map(t => (
             <li className="nav-item" key={t.id}>
               <button className={`nav-link ${activeTab === t.id ? 'active' : ''}`}
@@ -99,7 +115,7 @@ export default function Dashboard({ user, patients, exits, onLogout, hasPerm, lo
           <div className="modal-dialog modal-dialog-scrollable">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">تغيير كلمة المرور</h5>
+                <h5 className="modal-title"><i className="bi bi-key me-2"></i>تغيير كلمة المرور</h5>
                 <button type="button" className="btn-close" onClick={() => setCpShow(false)}></button>
               </div>
               <div className="modal-body">
@@ -114,11 +130,12 @@ export default function Dashboard({ user, patients, exits, onLogout, hasPerm, lo
                     onChange={e => setCpForm(f => ({ ...f, newPw: e.target.value }))} />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">تأكيد كلمة المرور</label>
+                  <label className="form-label">تأكيد كلمة المرور الجديدة</label>
                   <input type="password" className="form-control" value={cpForm.confirm}
                     onChange={e => setCpForm(f => ({ ...f, confirm: e.target.value }))} />
                 </div>
                 {cpError && <div className="alert alert-danger py-2">{cpError}</div>}
+                {cpInfo && <div className="alert alert-success py-2">{cpInfo}</div>}
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setCpShow(false)}>إلغاء</button>

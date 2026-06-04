@@ -2,6 +2,46 @@ import { getSupabase } from './supabase';
 
 function supabase() { return getSupabase(); }
 
+const PERM_MODULES = [
+  { module: 'patients', actions: ['show','add','edit','delete','print'] },
+  { module: 'users', actions: ['show','add','edit','delete'] },
+  { module: 'statistics', actions: ['show','print'] },
+  { module: 'age_statistics', actions: ['show','print'] },
+  { module: 'normal_statistics', actions: ['show','print'] },
+  { module: 'missing_numbers', actions: ['show'] },
+  { module: 'checkout_log', actions: ['show','edit'] },
+  { module: 'vacations', actions: ['show','click'] },
+  { module: 'internal_review', actions: ['show','edit_order','actions'] },
+  { module: 'state_expense', actions: ['show','edit'] },
+];
+
+function permRowToObject(row) {
+  if (!row) return {};
+  const obj = {};
+  for (const m of PERM_MODULES) {
+    for (const a of m.actions) {
+      const col = `${m.module}_${a}`;
+      if (!obj[m.module]) obj[m.module] = {};
+      obj[m.module][a] = row[col] === 'نعم';
+    }
+  }
+  return obj;
+}
+
+function permObjectToRow(obj) {
+  const row = {};
+  for (const m of PERM_MODULES) {
+    for (const a of m.actions) {
+      row[`${m.module}_${a}`] = obj?.[m.module]?.[a] ? 'نعم' : 'لا';
+    }
+  }
+  return row;
+}
+
+function permDefaults() {
+  return permObjectToRow({});
+}
+
 function mapPatientRow(row) {
   return {
     id: row.patient_id,
@@ -59,20 +99,35 @@ export async function loginUser(email, password = null, checkOnly = false) {
       name: data.name,
       email: data.email,
       position: data.position,
-      permissions: data.permissions || {},
+      permissions: permRowToObject(data),
     }
   };
 }
 
 export async function createAccount(name, email, password, phone) {
+  // تشفير ID قصير
+  const id = 'u-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
   const { error } = await supabase().from('accounts').insert({
-    name, email, password, phone,
+    id, name, email, password: String(password || ''), phone: phone || '',
     approved: 'انتظار المراجعة',
     position: 'مستخدم',
-    permissions: {}
+    ...permDefaults(),
   });
   if (error) return { success: false, message: error.message };
-  return { success: true, message: 'تم إنشاء الحساب بنجاح، يرجى انتظار المراجعة' };
+  return { success: true, message: 'تم إنشاء الحساب بنجاح، يرجى انتظار مراجعة المدير' };
+}
+
+export async function getAllAccountsForLogin() {
+  // يجلب فقط id/email/password/approved — مفيد لتجديد الصلاحيات بعد التعديل
+  const { data, error } = await supabase().from('accounts').select('*').eq('email').limit(1);
+  if (error || !data || !data.length) return null;
+  return data[0];
+}
+
+export async function getAccountById(id) {
+  const { data, error } = await supabase().from('accounts').select('*').eq('id', id).single();
+  if (error || !data) return null;
+  return data;
 }
 
 export async function updatePassword(userId, oldPassword, newPassword) {
@@ -172,21 +227,29 @@ export async function returnPatientToDepartment(exitData) {
 // ==================== USERS ====================
 
 export async function getAllUsers() {
-  const { data, error } = await supabase().from('accounts').select('*').order('id');
-  if (error) throw error;
-  return data.map(r => ({
-    id: r.id, name: r.name, email: r.email, password: r.password,
-    phone: r.phone, approved: r.approved, position: r.position,
-    permissions: r.permissions || {},
-  }));
+  try {
+    const { data, error } = await supabase().from('accounts').select('*').order('id');
+    if (error) throw error;
+    return (data || []).map(r => ({
+      id: r.id, name: r.name || '', email: r.email || '', password: r.password || '',
+      phone: r.phone || '', approved: r.approved || 'موافق', position: r.position || 'مستخدم',
+      permissions: permRowToObject(r),
+    }));
+  } catch (err) {
+    console.error('getAllUsers error:', err);
+    throw err;
+  }
 }
 
 export async function updateUser(userData) {
-  const payload = { name: userData.name, email: userData.email, phone: userData.phone };
+  const payload = {};
+  if (userData.name !== undefined) payload.name = userData.name;
+  if (userData.email !== undefined) payload.email = userData.email;
+  if (userData.phone !== undefined) payload.phone = userData.phone;
   if (userData.password) payload.password = userData.password;
-  if (userData.permissions) payload.permissions = userData.permissions;
-  if (userData.approved) payload.approved = userData.approved;
-  if (userData.position) payload.position = userData.position;
+  if (userData.permissions) Object.assign(payload, permObjectToRow(userData.permissions));
+  if (userData.approved !== undefined) payload.approved = userData.approved;
+  if (userData.position !== undefined) payload.position = userData.position;
 
   const { error } = await supabase().from('accounts').update(payload).eq('id', userData.id);
   if (error) throw error;
@@ -197,6 +260,43 @@ export async function deleteUser(userId) {
   const { error } = await supabase().from('accounts').delete().eq('id', userId);
   if (error) throw error;
   return { success: true, message: 'تم الحذف بنجاح' };
+}
+
+// اشتراك Realtime على المستخدمين (للحصول على تحديث لحظي للصلاحيات)
+export function subscribeUsers(onChange) {
+  const channel = supabase()
+    .channel('accounts-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'accounts' }, () => {
+      onChange();
+    })
+    .subscribe();
+  return channel;
+}
+
+export function unsubscribeChannel(channel) {
+  if (channel) supabase().removeChannel(channel);
+}
+
+// اشتراك Realtime على المرضى
+export function subscribePatients(onChange) {
+  const channel = supabase()
+    .channel('patients-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'patients' }, () => {
+      onChange();
+    })
+    .subscribe();
+  return channel;
+}
+
+// اشتراك Realtime على سجل الخروج
+export function subscribeExits(onChange) {
+  const channel = supabase()
+    .channel('exits-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'exits' }, () => {
+      onChange();
+    })
+    .subscribe();
+  return channel;
 }
 
 // ==================== HELPERS ====================
@@ -282,7 +382,20 @@ export function calculateAgeFromNationalId(nationalId) {
 
 export function generateUniquePatientId(len = 10) {
   const cs = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-  return Array.from({ length: len })
-    .map(() => cs[Math.floor(Math.random() * cs.length)])
-    .join('');
+  const make = n => {
+    const a = new Uint32Array(n);
+    if (typeof window !== 'undefined' && window.crypto) {
+      window.crypto.getRandomValues(a);
+    } else {
+      for (let i = 0; i < n; i++) a[i] = Math.floor(Math.random() * 0xffffffff);
+    }
+    return Array.from(a).map(v => cs[v % cs.length]).join('');
+  };
+  // 3 محاولات لتفادي التكرار (احتمال ضعيف لكن للأمان)
+  return make(len);
+}
+
+// مولّد unique id للحسابات
+export function generateAccountId() {
+  return 'u-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
 }

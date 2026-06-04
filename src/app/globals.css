@@ -2,6 +2,10 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #f8f9fa;
 }
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
 .custom-pill-badge {
   background: #167CFF !important;
   color: #fff !important;
@@ -12,5 +16,81 @@ body {
   display: inline-block;
   letter-spacing: .5px;
 }
-.vac-overdue { background-color: #ffcccc !important; }
-.stats-card { border-top: 3px solid #0d6efd; }
+.vac-overdue {
+  background-color: #ffcccc !important;
+}
+.stats-card {
+  border-top: 3px solid #0d6efd;
+}
+.stats-card .card-title {
+  color: #212529;
+  font-weight: 600;
+}
+.login-container {
+  max-width: 400px;
+  margin: 60px auto;
+  padding: 20px;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,.1);
+}
+.table th {
+  background-color: #f1f5f9;
+}
+.table-responsive {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.tab-content {
+  padding: 20px 0;
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+input[type="date"].empty-date::-webkit-datetime-edit {
+  color: transparent;
+}
+input[type="date"].empty-date:focus::-webkit-datetime-edit {
+  color: inherit;
+}
+.modal-footer {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+@media (max-width: 576px) {
+  .login-container { margin: 20px auto; width: calc(100% - 24px); }
+  .container-fluid { padding-left: 8px !important; padding-right: 8px !important; }
+  .tab-content { padding: 8px 4px !important; }
+  .modal-footer .btn { flex: 1 1 auto; }
+  .navbar-brand { font-size: .9rem; }
+}
+@media (max-width: 768px) {
+  .container-fluid { padding-left: 8px !important; padding-right: 8px !important; }
+  .tab-content { padding: 10px 5px !important; }
+}
+.table-warning {
+  background-color: #fff3cd !important;
+}
+.table-warning:hover {
+  background-color: #ffe5b1 !important;
+}

@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import * as API from '@/lib/api';
 import LoginForm from '@/components/LoginForm';
 import Dashboard from '@/components/Dashboard';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 export default function Home() {
   const [user, setUser] = useState(null);
@@ -36,7 +37,22 @@ export default function Home() {
   const loadAll = useCallback(() => {
     loadPatients();
     loadExits();
-  }, [loadPatients, loadExits]);
+    loadUsers();
+  }, [loadPatients, loadExits, loadUsers]);
+
+  // Realtime subscriptions
+  const channelsRef = useRef([]);
+  useEffect(() => {
+    if (!user) return;
+    const pCh = API.subscribePatients(() => loadPatients());
+    const eCh = API.subscribeExits(() => loadExits());
+    const uCh = API.subscribeUsers(() => loadUsers());
+    channelsRef.current = [pCh, eCh, uCh];
+    return () => {
+      channelsRef.current.forEach(ch => API.unsubscribeChannel(ch));
+      channelsRef.current = [];
+    };
+  }, [user, loadPatients, loadExits, loadUsers]);
 
   useEffect(() => {
     const saved = localStorage.getItem('currentUser');
@@ -44,6 +60,12 @@ export default function Home() {
       try {
         const u = JSON.parse(saved);
         setUser(u);
+        // تحديث الاسم/الصلاحية من السيرفر في الخلفية
+        API.getAccountById(u.id).then(fresh => {
+          if (fresh) {
+            setUser(prev => prev ? { ...prev, name: fresh.name, position: fresh.position, approved: fresh.approved } : prev);
+          }
+        }).catch(() => {});
       } catch {}
     }
     setLoading(false);
@@ -59,12 +81,16 @@ export default function Home() {
   };
 
   const handleLogout = () => {
+    // تنظيف الاشتراكات
+    channelsRef.current.forEach(ch => API.unsubscribeChannel(ch));
+    channelsRef.current = [];
     setUser(null);
     localStorage.removeItem('currentUser');
   };
 
   const handlePermissionCheck = (mod, action = 'show') => {
     if (!user || !user.permissions) return false;
+    if (mod === 'users') return user.position === 'مدير';
     return !!(user.permissions[mod] && user.permissions[mod][action]);
   };
 
@@ -79,17 +105,19 @@ export default function Home() {
   }
 
   return (
-    <Dashboard
-      user={user}
-      patients={patients}
-      exits={exits}
-      users={users}
-      onLogout={handleLogout}
-      hasPerm={handlePermissionCheck}
-      loadPatients={loadPatients}
-      loadExits={loadExits}
-      loadUsers={loadUsers}
-      loadAll={loadAll}
-    />
+    <ErrorBoundary>
+      <Dashboard
+        user={user}
+        patients={patients}
+        exits={exits}
+        users={users}
+        onLogout={handleLogout}
+        hasPerm={handlePermissionCheck}
+        loadPatients={loadPatients}
+        loadExits={loadExits}
+        loadUsers={loadUsers}
+        loadAll={loadAll}
+      />
+    </ErrorBoundary>
   );
 }
