@@ -1,4 +1,6 @@
-import { supabase } from './supabase';
+import { getSupabase } from './supabase';
+
+function supabase() { return getSupabase(); }
 
 function mapPatientRow(row) {
   return {
@@ -37,7 +39,7 @@ function mapPatientRow(row) {
 // ==================== AUTH ====================
 
 export async function loginUser(email, password = null, checkOnly = false) {
-  let query = supabase
+  let query = supabase()
     .from('accounts')
     .select('*')
     .eq('email', email);
@@ -63,7 +65,7 @@ export async function loginUser(email, password = null, checkOnly = false) {
 }
 
 export async function createAccount(name, email, password, phone) {
-  const { error } = await supabase.from('accounts').insert({
+  const { error } = await supabase().from('accounts').insert({
     name, email, password, phone,
     approved: 'انتظار المراجعة',
     position: 'مستخدم',
@@ -74,10 +76,10 @@ export async function createAccount(name, email, password, phone) {
 }
 
 export async function updatePassword(userId, oldPassword, newPassword) {
-  const { data, error } = await supabase.from('accounts').select('password').eq('id', userId).single();
+  const { data, error } = await supabase().from('accounts').select('password').eq('id', userId).single();
   if (error || !data) throw new Error('تعذر التحقق من المستخدم');
   if (data.password !== oldPassword) throw new Error('كلمة المرور الحالية غير صحيحة');
-  const { error: updateError } = await supabase.from('accounts').update({ password: newPassword }).eq('id', userId);
+  const { error: updateError } = await supabase().from('accounts').update({ password: newPassword }).eq('id', userId);
   if (updateError) throw updateError;
   return { success: true };
 }
@@ -85,7 +87,7 @@ export async function updatePassword(userId, oldPassword, newPassword) {
 // ==================== PATIENTS ====================
 
 export async function getAllPatients() {
-  const { data, error } = await supabase
+  const { data, error } = await supabase()
     .from('patients')
     .select('*')
     .neq('status', 'خروج')
@@ -98,12 +100,12 @@ export async function getAllPatients() {
 
 export async function addPatient(patientData) {
   const row = buildPatientRow(patientData);
-  const { error } = await supabase.from('patients').insert(row);
+  const { error } = await supabase().from('patients').insert(row);
   if (error) throw error;
 
   if (patientData.status === 'خروج') {
-    await supabase.from('exits').insert(buildExitRow(patientData));
-    await supabase.from('patients').delete().eq('patient_id', patientData.id);
+    await supabase().from('exits').insert(buildExitRow(patientData));
+    await supabase().from('patients').delete().eq('patient_id', patientData.id);
   }
 
   return getAllPatients();
@@ -111,25 +113,25 @@ export async function addPatient(patientData) {
 
 export async function updatePatient(patientData) {
   const row = buildPatientRow(patientData);
-  const { error } = await supabase.from('patients').update(row).eq('patient_id', patientData.id);
+  const { error } = await supabase().from('patients').update(row).eq('patient_id', patientData.id);
   if (error) throw error;
 
   if (patientData.status === 'خروج') {
-    await supabase.from('exits').insert(buildExitRow(patientData));
-    await supabase.from('patients').delete().eq('patient_id', patientData.id);
+    await supabase().from('exits').insert(buildExitRow(patientData));
+    await supabase().from('patients').delete().eq('patient_id', patientData.id);
   }
 
   return getAllPatients();
 }
 
 export async function deletePatient(patientId) {
-  const { error } = await supabase.from('patients').delete().eq('patient_id', patientId);
+  const { error } = await supabase().from('patients').delete().eq('patient_id', patientId);
   if (error) throw error;
   return getAllPatients();
 }
 
 export async function updateStateExpenseFields(id, updates) {
-  const { error } = await supabase.from('patients').update({
+  const { error } = await supabase().from('patients').update({
     committee_date: updates.committeeDate || null,
     state_expense_status: updates.stateExpenseStatus || null,
     state_expense_end_date: updates.stateExpenseEndDate || null,
@@ -140,7 +142,7 @@ export async function updateStateExpenseFields(id, updates) {
 }
 
 export async function updateReviewNumber(patientId, reviewNumber) {
-  const { error } = await supabase.from('patients')
+  const { error } = await supabase().from('patients')
     .update({ review_number: reviewNumber ? parseInt(reviewNumber) : null })
     .eq('patient_id', patientId);
   if (error) throw error;
@@ -150,20 +152,19 @@ export async function updateReviewNumber(patientId, reviewNumber) {
 // ==================== EXITS ====================
 
 export async function getAllExits() {
-  const { data, error } = await supabase.from('exits').select('*').order('out_date', { ascending: false });
+  const { data, error } = await supabase().from('exits').select('*').order('out_date', { ascending: false });
   if (error) throw error;
   return { count: data.length, exits: data.map(mapPatientRow) };
 }
 
 export async function returnPatientToDepartment(exitData) {
   const row = buildPatientRow({
-    ...exitData,
-    status: 'متواجد',
+    ...exitData, status: 'متواجد',
     holidayDate: '', returnDate: '', outDate: '', outType: '', outNote: ''
   });
-  const { error: deleteError } = await supabase.from('exits').delete().eq('patient_id', exitData.patientId || exitData.id);
+  const { error: deleteError } = await supabase().from('exits').delete().eq('patient_id', exitData.patientId || exitData.id);
   if (deleteError) throw deleteError;
-  const { error } = await supabase.from('patients').upsert(row, { onConflict: 'patient_id' });
+  const { error } = await supabase().from('patients').upsert(row, { onConflict: 'patient_id' });
   if (error) throw error;
   return getAllPatients();
 }
@@ -171,7 +172,7 @@ export async function returnPatientToDepartment(exitData) {
 // ==================== USERS ====================
 
 export async function getAllUsers() {
-  const { data, error } = await supabase.from('accounts').select('*').order('id');
+  const { data, error } = await supabase().from('accounts').select('*').order('id');
   if (error) throw error;
   return data.map(r => ({
     id: r.id, name: r.name, email: r.email, password: r.password,
@@ -187,13 +188,13 @@ export async function updateUser(userData) {
   if (userData.approved) payload.approved = userData.approved;
   if (userData.position) payload.position = userData.position;
 
-  const { error } = await supabase.from('accounts').update(payload).eq('id', userData.id);
+  const { error } = await supabase().from('accounts').update(payload).eq('id', userData.id);
   if (error) throw error;
   return { success: true, message: 'تم التحديث بنجاح' };
 }
 
 export async function deleteUser(userId) {
-  const { error } = await supabase.from('accounts').delete().eq('id', userId);
+  const { error } = await supabase().from('accounts').delete().eq('id', userId);
   if (error) throw error;
   return { success: true, message: 'تم الحذف بنجاح' };
 }
