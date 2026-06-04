@@ -73,6 +73,15 @@ export async function createAccount(name, email, password, phone) {
   return { success: true, message: 'تم إنشاء الحساب بنجاح، يرجى انتظار المراجعة' };
 }
 
+export async function updatePassword(userId, oldPassword, newPassword) {
+  const { data, error } = await supabase.from('accounts').select('password').eq('id', userId).single();
+  if (error || !data) throw new Error('تعذر التحقق من المستخدم');
+  if (data.password !== oldPassword) throw new Error('كلمة المرور الحالية غير صحيحة');
+  const { error: updateError } = await supabase.from('accounts').update({ password: newPassword }).eq('id', userId);
+  if (updateError) throw updateError;
+  return { success: true };
+}
+
 // ==================== PATIENTS ====================
 
 export async function getAllPatients() {
