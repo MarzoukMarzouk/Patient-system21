@@ -31,6 +31,15 @@ export default function Home() {
     try {
       const result = await API.getAllUsers();
       setUsers(result);
+      setUser(prev => {
+        if (!prev) return prev;
+        const freshMe = result.find(x => x.id === prev.id);
+        if (freshMe) {
+          localStorage.setItem('currentUser', JSON.stringify(freshMe));
+          return freshMe;
+        }
+        return prev;
+      });
     } catch {}
   }, []);
 
@@ -90,7 +99,8 @@ export default function Home() {
 
   const handlePermissionCheck = (mod, action = 'show') => {
     if (!user || !user.permissions) return false;
-    if (mod === 'users') return user.position === 'مدير';
+    // الضمان الوحيد للأدمن الأساسي هو صفحة المستخدمين حتى لا يفقد السيطرة، باقي الصلاحيات تتأثر بعلامات الصح
+    if (user.email === 'abomrzk@gmail.com' && mod === 'users') return true;
     return !!(user.permissions[mod] && user.permissions[mod][action]);
   };
 

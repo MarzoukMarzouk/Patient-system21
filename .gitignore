@@ -5,3 +5,5 @@ node_modules
 .env.production
 .env.development
 out
+
+.vercel

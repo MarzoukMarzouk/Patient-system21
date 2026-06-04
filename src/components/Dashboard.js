@@ -6,6 +6,8 @@ import VacationsTab from './VacationsTab';
 import UsersTab from './UsersTab';
 import InternalReviewTab from './InternalReviewTab';
 import StatsTab from './StatsTab';
+import AgeStatsTab from './AgeStatsTab';
+import NormalStatsTab from './NormalStatsTab';
 import MissingNumbersTab from './MissingNumbersTab';
 import * as API from '@/lib/api';
 
@@ -20,6 +22,8 @@ export default function Dashboard({ user, patients, exits, onLogout, hasPerm, lo
     { id: 'patients', label: 'المرضى', check: () => hasPerm('patients') },
     { id: 'stateExpense', label: 'نفقة الدولة', check: () => hasPerm('state_expense') },
     { id: 'stats', label: 'الإحصائيات', check: () => hasPerm('statistics') },
+    { id: 'ageStats', label: 'احصائيات بالسن', check: () => hasPerm('age_statistics') },
+    { id: 'normalStats', label: 'طبيعيين', check: () => hasPerm('normal_statistics') },
     { id: 'vacations', label: 'الإجازات', check: () => hasPerm('vacations') },
     { id: 'exits', label: 'سجل الخروج', check: () => hasPerm('checkout_log') },
     { id: 'missingNumbers', label: 'الأرقام الناقصة', check: () => hasPerm('missing_numbers') },
@@ -60,6 +64,10 @@ export default function Dashboard({ user, patients, exits, onLogout, hasPerm, lo
         return <StateExpenseTab patients={patients} hasPerm={hasPerm} loadPatients={loadPatients} />;
       case 'stats':
         return <StatsTab patients={patients} hasPerm={hasPerm} />;
+      case 'ageStats':
+        return <AgeStatsTab patients={patients} hasPerm={hasPerm} />;
+      case 'normalStats':
+        return <NormalStatsTab patients={patients} hasPerm={hasPerm} />;
       case 'vacations':
         return <VacationsTab patients={patients} hasPerm={hasPerm}
           onEditPatient={(id) => { localStorage.setItem('editPatientNext', id); setActiveTab('patients'); }} />;
@@ -79,7 +87,7 @@ export default function Dashboard({ user, patients, exits, onLogout, hasPerm, lo
 
   return (
     <div>
-      <nav className="navbar navbar-dark bg-primary py-2">
+      <nav className="navbar navbar-dark bg-primary py-2 d-print-none">
         <div className="container-fluid">
           <span className="navbar-brand mb-0 h6">نظام إدارة المرضى</span>
           <div className="d-flex align-items-center gap-2">
@@ -97,16 +105,17 @@ export default function Dashboard({ user, patients, exits, onLogout, hasPerm, lo
         </div>
       </nav>
       <div className="container-fluid px-2 mt-2">
-        <ul className="nav nav-tabs mb-2 flex-wrap">
-          {tabs.map(t => (
-            <li className="nav-item" key={t.id}>
-              <button className={`nav-link ${activeTab === t.id ? 'active' : ''}`}
-                onClick={() => setActiveTab(t.id)}>
-                {t.label}
-              </button>
-            </li>
-          ))}
-        </ul>
+        <div className="mb-3 d-print-none">
+          <select 
+            className="form-select form-select-lg border-primary shadow-sm" 
+            value={activeTab} 
+            onChange={(e) => setActiveTab(e.target.value)}
+          >
+            {tabs.map(t => (
+              <option key={t.id} value={t.id}>{t.label}</option>
+            ))}
+          </select>
+        </div>
         <div className="tab-content">{renderTab()}</div>
       </div>
 

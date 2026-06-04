@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import * as API from '@/lib/api';
 
 function formatDate(d) {
@@ -33,6 +33,8 @@ export default function PatientsTab({ patients, hasPerm, loadPatients, loadExits
   const [filter, setFilter] = useState(null);
   const [search, setSearch] = useState('');
   const [filtered, setFiltered] = useState(null);
+  const [showPrintModal, setShowPrintModal] = useState(false);
+  const [printData, setPrintData] = useState(null);
 
   const displayList = filtered || patients;
 
@@ -94,7 +96,8 @@ export default function PatientsTab({ patients, hasPerm, loadPatients, loadExits
   const patientForEdit = editId ? patients.find(p => p.id === editId) : null;
 
   return (
-    <div>
+    <>
+    <div className="d-print-none">
       <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
         <div className="d-flex gap-2 flex-wrap">
           <input type="text" className="form-control form-control-sm" placeholder="بحث بالاسم أو رقم الملف..." value={search}
@@ -108,11 +111,18 @@ export default function PatientsTab({ patients, hasPerm, loadPatients, loadExits
             </button>
           )}
         </div>
-        {hasPerm('patients', 'add') && (
-          <button className="btn btn-success btn-sm" onClick={() => { setEditId(null); setShowModal(true); }}>
-            <i className="bi bi-plus-lg"></i> إضافة
-          </button>
-        )}
+        <div className="d-flex gap-2">
+          {hasPerm('patients', 'print') && (
+            <button className="btn btn-outline-primary btn-sm d-print-none" onClick={() => setShowPrintModal(true)}>
+              <i className="bi bi-printer"></i> طباعة
+            </button>
+          )}
+          {hasPerm('patients', 'add') && (
+            <button className="btn btn-success btn-sm d-print-none" onClick={() => { setEditId(null); setShowModal(true); }}>
+              <i className="bi bi-plus-lg"></i> إضافة
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="collapse mb-2" id="filtersCollapse">
@@ -238,7 +248,59 @@ export default function PatientsTab({ patients, hasPerm, loadPatients, loadExits
           onDelete={patientForEdit && hasPerm('patients', 'delete') ? () => handleDelete(patientForEdit.id) : null}
         />
       )}
+
+      {showPrintModal && (
+        <PrintModal
+          patients={displayList.filter(p => !search || (p.patientName || '').includes(search) || (p.fileNumber || '').includes(search)).sort((a, b) => parseInt(a.fileNumber || 0) - parseInt(b.fileNumber || 0))}
+          filter={filter}
+          onClose={() => setShowPrintModal(false)}
+          onConfirm={(data) => {
+            setPrintData(data);
+            setShowPrintModal(false);
+            setTimeout(() => window.print(), 300);
+          }}
+        />
+      )}
     </div>
+
+    {/* Print Only Section */}
+    {printData && (
+      <div className="d-none d-print-block" dir="rtl" style={{ backgroundColor: 'white', padding: '20px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px solid #ccc', paddingBottom: '10px' }}>
+          <h2 style={{ color: '#2c3e50', marginBottom: '10px' }}>نظام إدارة المرضى - قائمة المرضى</h2>
+          <div style={{ fontSize: '16px', color: '#555' }}>
+            {printData.filter ? `الفلتر: ${printData.filter.v} | ` : ''}
+            عدد المرضى: {printData.patients.length} | 
+            التاريخ: {new Date().toLocaleDateString('ar-EG')}
+          </div>
+        </div>
+        <table className="table table-bordered table-sm" style={{ fontSize: '14px' }}>
+          <thead className="table-light">
+            <tr>
+              {Object.entries(printData.cols).filter(([_, show]) => show).map(([key]) => (
+                <th key={key} className="text-center bg-primary text-white">{printData.colLabels[key]}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {printData.patients.map((p, idx) => (
+              <tr key={idx}>
+                {Object.entries(printData.cols).filter(([_, show]) => show).map(([key]) => {
+                  let val = p[key] || '';
+                  if (key === 'dateOfEntry' || key === 'dateOfBirth') {
+                    const parts = val.split('-');
+                    if (parts.length === 3) val = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                  }
+                  if (key === 'internalDiseases') val = (val || '').split(',').map(s => s.trim()).filter(Boolean).join('، ');
+                  return <td key={key} className="text-center">{val}</td>;
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+    </>
   );
 }
 
@@ -548,3 +610,54 @@ function PatientModal({ patient, onSave, onClose, onDelete }) {
     </div>
   );
 }
+
+function PrintModal({ patients, filter, onClose, onConfirm }) {
+  const [cols, setCols] = useState({
+    fileNumber: true, patientName: true, dateOfEntry: true, diagnosis: true, enrolmentNumber: true, category: true, identity: true, nationalId: true, dateOfBirth: true, age: true, ageClassification: true, familyPhone: true, clozapax: true, internalPatient: true, internalDiseases: true, status: true
+  });
+  const [loading, setLoading] = useState(false);
+
+  const colLabels = {
+    fileNumber: 'رقم الملف', patientName: 'اسم المريض', dateOfEntry: 'تاريخ الدخول', diagnosis: 'التشخيص', enrolmentNumber: 'رقم القيد', category: 'الفئة', identity: 'الهوية', nationalId: 'الرقم القومي', dateOfBirth: 'تاريخ الميلاد', age: 'العمر', ageClassification: 'تصنيف العمر', familyPhone: 'هاتف الاهل', clozapax: 'كلوزاباكس', internalPatient: 'مريض باطنة', internalDiseases: 'الأمراض الباطنية', status: 'الحالة'
+  };
+
+  const handlePrint = () => {
+    onConfirm({ patients, filter, cols, colLabels });
+  };
+
+  return (
+    <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,.5)' }}>
+      <div className="modal-dialog modal-lg modal-dialog-centered">
+        <div className="modal-content">
+          <div className="modal-header">
+            <h5 className="modal-title">خيارات طباعة المرضى</h5>
+            <button type="button" className="btn-close" onClick={onClose} disabled={loading}></button>
+          </div>
+          <div className="modal-body">
+            <div className="mb-3 fw-bold text-primary">اختر الأعمدة التي تريد تضمينها في الطباعة:</div>
+            <div className="row g-3">
+              {Object.keys(colLabels).map(key => (
+                <div className="col-12 col-sm-6 col-md-4" key={key}>
+                  <div className="d-flex align-items-center gap-2">
+                    <input className="form-check-input m-0" type="checkbox" id={`print-col-${key}`} checked={cols[key]} onChange={e => setCols(prev => ({ ...prev, [key]: e.target.checked }))} disabled={loading} style={{ transform: 'scale(1.2)', cursor: 'pointer' }} />
+                    <label className="form-check-label mb-0" htmlFor={`print-col-${key}`} style={{ cursor: 'pointer', userSelect: 'none' }}>{colLabels[key]}</label>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="btn btn-outline-secondary me-auto" onClick={() => setCols(Object.keys(cols).reduce((acc, k) => ({ ...acc, [k]: true }), {}))} disabled={loading}>تحديد الكل</button>
+            <button type="button" className="btn btn-outline-secondary me-2" onClick={() => setCols(Object.keys(cols).reduce((acc, k) => ({ ...acc, [k]: false }), {}))} disabled={loading}>إلغاء التحديد</button>
+            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>إلغاء</button>
+            <button type="button" className="btn btn-primary" onClick={handlePrint} disabled={loading}>
+              {loading ? <span className="spinner-border spinner-border-sm me-2"></span> : <i className="bi bi-printer me-2"></i>}
+              تأكيد الطباعة (PDF)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
