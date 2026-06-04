@@ -146,6 +146,8 @@ ALTER TABLE accounts ADD COLUMN IF NOT EXISTS internal_review_edit_order text DE
 ALTER TABLE accounts ADD COLUMN IF NOT EXISTS internal_review_actions text DEFAULT 'لا';
 ALTER TABLE accounts ADD COLUMN IF NOT EXISTS state_expense_show text DEFAULT 'لا';
 ALTER TABLE accounts ADD COLUMN IF NOT EXISTS state_expense_edit text DEFAULT 'لا';
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS state_expense_follow_up_show text DEFAULT 'لا';
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS state_expense_follow_up_edit text DEFAULT 'لا';
 
 -- ===== تفعيل الحسابات الموجودة =====
 UPDATE accounts SET approved = 'موافق' WHERE approved IS NULL OR approved = 'انتظار المراجعة';
@@ -159,7 +161,8 @@ UPDATE accounts SET
   checkout_log_show = 'نعم', checkout_log_edit = 'نعم',
   vacations_show = 'نعم', vacations_click = 'نعم',
   internal_review_show = 'نعم', internal_review_edit_order = 'نعم', internal_review_actions = 'نعم',
-  state_expense_show = 'نعم', state_expense_edit = 'نعم'
+  state_expense_show = 'نعم', state_expense_edit = 'نعم',
+  state_expense_follow_up_show = 'نعم', state_expense_follow_up_edit = 'نعم'
   WHERE patients_show IS NULL;
 
 -- ===== إسقاط عمود permissions القديم (لو كان JSONB) =====
@@ -201,7 +204,8 @@ begin
     checkout_log_show = 'نعم', checkout_log_edit = 'نعم',
     vacations_show = 'نعم', vacations_click = 'نعم',
     internal_review_show = 'نعم', internal_review_edit_order = 'نعم', internal_review_actions = 'نعم',
-    state_expense_show = 'نعم', state_expense_edit = 'نعم'
+    state_expense_show = 'نعم', state_expense_edit = 'نعم',
+    state_expense_follow_up_show = 'نعم', state_expense_follow_up_edit = 'نعم'
   where email = 'abomrzk@gmail.com';
 
   if not found then
@@ -215,7 +219,8 @@ begin
       checkout_log_show, checkout_log_edit,
       vacations_show, vacations_click,
       internal_review_show, internal_review_edit_order, internal_review_actions,
-      state_expense_show, state_expense_edit)
+      state_expense_show, state_expense_edit,
+      state_expense_follow_up_show, state_expense_follow_up_edit)
     values (
       'admin-001', 'المدير', 'abomrzk@gmail.com', 'mm', '', 'موافق', 'مدير',
       'نعم','نعم','نعم','نعم','نعم',
@@ -224,6 +229,7 @@ begin
       'نعم','نعم','نعم',
       'نعم','نعم','نعم','نعم',
       'نعم','نعم','نعم',
+      'نعم','نعم',
       'نعم','نعم');
   end if;
 end;

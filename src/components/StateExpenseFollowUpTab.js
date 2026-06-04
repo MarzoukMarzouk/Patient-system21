@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import * as API from '@/lib/api';
 
-export default function StateExpenseTab({ patients, hasPerm, loadPatients }) {
+export default function StateExpenseFollowUpTab({ patients, hasPerm, loadPatients }) {
   const [search, setSearch] = useState('');
   const [copyMsg, setCopyMsg] = useState('');
 
@@ -51,8 +51,16 @@ export default function StateExpenseTab({ patients, hasPerm, loadPatients }) {
     }
   };
 
+  const today = new Date();
+  today.setHours(23, 59, 59, 0);
+
   const displayList = patients
     .filter(p => p.category === 'نفقة الدولة')
+    .filter(p => {
+      if (!p.stateExpenseEndDate) return true;
+      const endDate = new Date(p.stateExpenseEndDate);
+      return endDate <= today;
+    })
     .filter(p => {
       if (!search) return true;
       const q = search.toLowerCase();
@@ -68,7 +76,7 @@ export default function StateExpenseTab({ patients, hasPerm, loadPatients }) {
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-        <h5 className="mb-0">نفقة الدولة</h5>
+        <h5 className="mb-0">متابعة نفقة الدولة</h5>
         <div className="d-flex gap-2 align-items-center">
           {copyMsg && <span className="text-success small">{copyMsg}</span>}
           <input type="text" className="form-control form-control-sm" placeholder="بحث..." value={search}
@@ -102,7 +110,7 @@ export default function StateExpenseTab({ patients, hasPerm, loadPatients }) {
                   <select className="form-select form-select-sm"
                     value={p.stateExpenseStatus || ''}
                     onChange={e => handleFieldChange(p.id, 'stateExpenseStatus', e.target.value)}
-                    disabled={!hasPerm('state_expense', 'edit')}>
+                    disabled={!hasPerm('state_expense_follow_up', 'edit')}>
                     <option value=""></option>
                     <option value="تم الرفع">تم الرفع</option>
                     <option value="ساري">ساري</option>
@@ -112,10 +120,10 @@ export default function StateExpenseTab({ patients, hasPerm, loadPatients }) {
                   <input type="date" className="form-control form-control-sm"
                     value={p.stateExpenseEndDate || ''}
                     onChange={e => handleFieldChange(p.id, 'stateExpenseEndDate', e.target.value)}
-                    disabled={!hasPerm('state_expense', 'edit')} />
+                    disabled={!hasPerm('state_expense_follow_up', 'edit')} />
                 </td>
                 <td>
-                  {hasPerm('state_expense', 'edit') && (
+                  {hasPerm('state_expense_follow_up', 'edit') && (
                     <button className="btn btn-sm btn-outline-success" title="تجديد +30 يوم" onClick={() => handleRenew(p.id)}>
                       <i className="bi bi-arrow-repeat"></i>
                     </button>
@@ -125,7 +133,7 @@ export default function StateExpenseTab({ patients, hasPerm, loadPatients }) {
                   <input type="text" className="form-control form-control-sm"
                     value={p.stateExpenseNotes || ''}
                     onChange={e => handleFieldChange(p.id, 'stateExpenseNotes', e.target.value)}
-                    disabled={!hasPerm('state_expense', 'edit')} />
+                    disabled={!hasPerm('state_expense_follow_up', 'edit')} />
                 </td>
               </tr>
             ))}

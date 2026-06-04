@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import PatientsTab from './PatientsTab';
 import StateExpenseTab from './StateExpenseTab';
+import StateExpenseFollowUpTab from './StateExpenseFollowUpTab';
 import ExitsTab from './ExitsTab';
 import VacationsTab from './VacationsTab';
 import UsersTab from './UsersTab';
 import InternalReviewTab from './InternalReviewTab';
 import StatsTab from './StatsTab';
-import AgeStatsTab from './AgeStatsTab';
-import NormalStatsTab from './NormalStatsTab';
 import MissingNumbersTab from './MissingNumbersTab';
 import * as API from '@/lib/api';
 
@@ -21,6 +20,7 @@ export default function Dashboard({ user, patients, exits, onLogout, hasPerm, lo
   const tabs = [
     { id: 'patients', label: 'المرضى', check: () => hasPerm('patients') },
     { id: 'stateExpense', label: 'نفقة الدولة', check: () => hasPerm('state_expense') },
+    { id: 'stateExpenseFollowUp', label: 'متابعة نفقة الدولة', check: () => hasPerm('state_expense_follow_up') },
     { id: 'stats', label: 'الإحصائيات', check: () => hasPerm('statistics') },
     { id: 'ageStats', label: 'احصائيات بالسن', check: () => hasPerm('age_statistics') },
     { id: 'normalStats', label: 'طبيعيين', check: () => hasPerm('normal_statistics') },
@@ -62,6 +62,8 @@ export default function Dashboard({ user, patients, exits, onLogout, hasPerm, lo
         return <PatientsTab patients={patients} hasPerm={hasPerm} loadPatients={loadPatients} loadExits={loadExits} />;
       case 'stateExpense':
         return <StateExpenseTab patients={patients} hasPerm={hasPerm} loadPatients={loadPatients} />;
+      case 'stateExpenseFollowUp':
+        return <StateExpenseFollowUpTab patients={patients} hasPerm={hasPerm} loadPatients={loadPatients} />;
       case 'stats':
         return <StatsTab patients={patients} hasPerm={hasPerm} />;
       case 'ageStats':

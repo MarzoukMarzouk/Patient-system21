@@ -13,6 +13,7 @@ const PERM_MODULES = [
   { module: 'vacations', actions: ['show','click'] },
   { module: 'internal_review', actions: ['show','edit_order','actions'] },
   { module: 'state_expense', actions: ['show','edit'] },
+  { module: 'state_expense_follow_up', actions: ['show','edit'] },
 ];
 
 function permRowToObject(row) {
