@@ -12,6 +12,7 @@ const PERM_MODULES = [
   { module: 'vacations', label: 'الإجازات', actions: ['show', 'click'] },
   { module: 'internal_review', label: 'مراجعة الباطنة', actions: ['show', 'edit_order', 'actions'] },
   { module: 'state_expense', label: 'نفقة الدولة', actions: ['show', 'edit'] },
+  { module: 'state_expense_follow_up', label: 'متابعة نفقة الدولة', actions: ['show', 'edit'] },
 ];
 
 const ACTION_LABELS = {
