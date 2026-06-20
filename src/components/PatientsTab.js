@@ -125,8 +125,7 @@ export default function PatientsTab({ patients, hasPerm, loadPatients, loadExits
   return (
     <>
     <div className="d-print-none">
-      <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-        <div />
+      <div className="d-flex justify-content-start align-items-center mb-2 flex-wrap gap-2">
         <div className="d-flex gap-2 align-items-center flex-wrap">
           <input type="text" className="form-control form-control-sm" placeholder="بحث بالاسم أو رقم الملف..." value={search}
             onChange={e => setSearch(e.target.value)} style={{ maxWidth: 220 }} />
@@ -193,11 +192,11 @@ export default function PatientsTab({ patients, hasPerm, loadPatients, loadExits
             <tr>
               <th style={{cursor:'pointer'}} onClick={() => handleSort('fileNumber')}>رقم الملف{sortArrow('fileNumber')}</th>
               <th style={{cursor:'pointer'}} onClick={() => handleSort('patientName')}>اسم المريض{sortArrow('patientName')}</th>
-              <th>تاريخ الدخول</th><th>التشخيص</th>
+              <th>تاريخ الدخول</th><th>ت.دخول القسم</th><th>التشخيص</th>
               <th>رقم القيد</th>
               <th style={{cursor:'pointer'}} onClick={() => handleSort('category')}>الفئة{sortArrow('category')}</th>
               <th>الهوية</th><th>الرقم القومي</th>
-              <th>تاريخ الميلاد</th><th>العمر</th><th>تصنيف العمر</th><th>ت.دخول القسم</th>
+              <th>تاريخ الميلاد</th><th>العمر</th><th>تصنيف العمر</th>
               <th>كلوزاباكس</th><th>مريض باطنة</th><th>الأمراض الباطنية</th>
               <th>الحالة</th>
               <th>تاريخ الإجازة</th><th>تاريخ العودة</th><th>حالة الإجازة</th>
@@ -222,6 +221,7 @@ export default function PatientsTab({ patients, hasPerm, loadPatients, loadExits
                     <td>{p.fileNumber}</td>
                     <td>{p.patientName}</td>
                     <td>{formatDate(p.dateOfEntry)}</td>
+                    <td>{formatDate(p.departmentEntryDate)}</td>
                     <td>{p.diagnosis}</td>
                     <td>{p.enrolmentNumber}</td>
                     <td>{p.category}</td>
@@ -230,7 +230,6 @@ export default function PatientsTab({ patients, hasPerm, loadPatients, loadExits
                     <td>{formatDate(p.dateOfBirth)}</td>
                     <td>{p.age}</td>
                     <td>{p.ageClassification}</td>
-                    <td>{formatDate(p.departmentEntryDate)}</td>
                     <td>{p.clozapax}</td>
                     <td>{p.internalPatient}</td>
                     <td>{(p.internalDiseases || '').split(',').map(s => s.trim()).filter(Boolean).map(d =>
@@ -467,19 +466,16 @@ function PatientModal({ patient, onSave, onClose, onDelete }) {
                     onChange={e => handleChange('dateOfEntry', e.target.value)} lang="en-GB" />
                 </div>
                 <div className="col-md-4">
+                  <label className="form-label">ت.دخول القسم</label>
+                  <input type="date" className="form-control" value={form.departmentEntryDate}
+                    onChange={e => handleChange('departmentEntryDate', e.target.value)} />
+                </div>
+                <div className="col-md-4">
                   <label className="form-label">الفئة *</label>
                   <select className="form-select" value={form.category}
                     onChange={e => handleChange('category', e.target.value)}>
                     <option value="">-- اختر --</option>
                     {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">الهوية *</label>
-                  <select className="form-select" value={form.identity}
-                    onChange={e => handleChange('identity', e.target.value)}>
-                    <option value="">-- اختر --</option>
-                    {IDENTITIES.map(i => <option key={i} value={i}>{i}</option>)}
                   </select>
                 </div>
               </div>
@@ -491,9 +487,12 @@ function PatientModal({ patient, onSave, onClose, onDelete }) {
                     onChange={e => handleChange('diagnosis', e.target.value)} />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label">ت.دخول القسم</label>
-                  <input type="date" className="form-control" value={form.departmentEntryDate}
-                    onChange={e => handleChange('departmentEntryDate', e.target.value)} />
+                  <label className="form-label">الهوية *</label>
+                  <select className="form-select" value={form.identity}
+                    onChange={e => handleChange('identity', e.target.value)}>
+                    <option value="">-- اختر --</option>
+                    {IDENTITIES.map(i => <option key={i} value={i}>{i}</option>)}
+                  </select>
                 </div>
               </div>
 
