@@ -7,3 +7,5 @@ node_modules
 out
 
 .vercel
+
+.github-config.json

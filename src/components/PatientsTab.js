@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+﻿import { useState, useEffect } from 'react';
 import * as API from '@/lib/api';
 
 function formatDate(d) {
@@ -21,7 +21,7 @@ const OUT_TYPES = ['بصحبة نفسه', 'بصحبة الأهل', 'بصحبة �
 const EMPTY_FORM = {
   patientName: '', dateOfEntry: '', diagnosis: '', enrolmentNumber: '',
   fileNumber: '', category: '', identity: '', nationalId: '',
-  dateOfBirth: '', age: '', ageClassification: '', familyPhone: '',
+  dateOfBirth: '', age: '', ageClassification: '', departmentEntryDate: '',
   clozapax: '', internalPatient: '', status: 'متواجد',
   holidayDate: '', returnDate: '', vacationDurationType: '', vacationDays: '',
   outDate: '', outType: '', outNote: '',
@@ -30,13 +30,46 @@ const EMPTY_FORM = {
 export default function PatientsTab({ patients, hasPerm, loadPatients, loadExits }) {
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [filter, setFilter] = useState(null);
   const [search, setSearch] = useState('');
-  const [filtered, setFiltered] = useState(null);
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [printData, setPrintData] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    diagnosis: '', internalDisease: '', category: '', identity: '',
+    clozapax: '', internalPatient: '', ageClassification: ''
+  });
+  const [sortField, setSortField] = useState('');
+  const [sortDir, setSortDir] = useState('asc');
 
-  const displayList = filtered || patients;
+  const handleSort = (field) => {
+    setSortDir(prev => sortField === field && prev === 'asc' ? 'desc' : 'asc');
+    setSortField(field);
+  };
+
+  const sortArrow = (field) => {
+    if (sortField !== field) return '';
+    return sortDir === 'asc' ? ' ▲' : ' ▼';
+  };
+
+  const filteredList = patients
+    .filter(p => !search || (p.patientName || '').includes(search) || String(p.fileNumber || '').includes(search))
+    .filter(p => !filters.diagnosis || (p.diagnosis || '') === filters.diagnosis)
+    .filter(p => !filters.internalDisease || (p.internalDiseases || '').includes(filters.internalDisease))
+    .filter(p => !filters.category || (p.category || '') === filters.category)
+    .filter(p => !filters.identity || (p.identity || '') === filters.identity)
+    .filter(p => !filters.clozapax || (p.clozapax || '') === filters.clozapax)
+    .filter(p => !filters.internalPatient || (p.internalPatient || '') === filters.internalPatient)
+    .filter(p => !filters.ageClassification || (p.ageClassification || '') === filters.ageClassification)
+    .sort((a, b) => {
+      if (!sortField) return parseInt(a.fileNumber || 0) - parseInt(b.fileNumber || 0);
+      const va = (a[sortField] || '').toString();
+      const vb = (b[sortField] || '').toString();
+      const cmp = va.localeCompare(vb, 'ar', { numeric: true });
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+
+  const allDiagnoses = [...new Set(patients.map(p => p.diagnosis).filter(Boolean))].sort();
+  const allDiseases = [...new Set(patients.flatMap(p => (p.internalDiseases || '').split(',').map(s => s.trim()).filter(Boolean)))].sort();
 
   useEffect(() => {
     const pendingId = localStorage.getItem('editPatientNext');
@@ -47,13 +80,7 @@ export default function PatientsTab({ patients, hasPerm, loadPatients, loadExits
     }
   }, [patients]);
 
-  useEffect(() => {
-    if (filter) {
-      setFiltered(patients.filter(p => (p[filter.key] || '').includes(filter.value)));
-    } else {
-      setFiltered(null);
-    }
-  }, [filter, patients]);
+  
 
   const handleSave = async (formData, diseases) => {
     try {
@@ -79,7 +106,7 @@ export default function PatientsTab({ patients, hasPerm, loadPatients, loadExits
       await loadPatients();
       await loadExits();
     } catch (err) {
-      alert('خطأ: ' + err.message);
+      window.dispatchEvent(new CustomEvent('show-toast', { detail: { msg: 'خطأ: ' + (err.message || 'حدث خطأ'), type: 'danger' } }));
     }
   };
 
@@ -89,7 +116,7 @@ export default function PatientsTab({ patients, hasPerm, loadPatients, loadExits
       await API.deletePatient(id);
       await loadPatients();
     } catch (err) {
-      alert('خطأ: ' + err.message);
+      window.dispatchEvent(new CustomEvent('show-toast', { detail: { msg: 'خطأ: ' + (err.message || 'حدث خطأ'), type: 'danger' } }));
     }
   };
 
@@ -99,96 +126,86 @@ export default function PatientsTab({ patients, hasPerm, loadPatients, loadExits
     <>
     <div className="d-print-none">
       <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-        <div className="d-flex gap-2 flex-wrap">
+        <div />
+        <div className="d-flex gap-2 align-items-center flex-wrap">
           <input type="text" className="form-control form-control-sm" placeholder="بحث بالاسم أو رقم الملف..." value={search}
             onChange={e => setSearch(e.target.value)} style={{ maxWidth: 220 }} />
-          <button className="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#filtersCollapse">
+          <button className={`btn btn-sm ${showFilters ? 'btn-info' : 'btn-outline-info'}`}
+            onClick={() => setShowFilters(!showFilters)}>
             <i className="bi bi-funnel"></i> فلتر
           </button>
-          {filter && (
-            <button className="btn btn-sm btn-outline-secondary" onClick={() => setFilter(null)}>
-              إلغاء الفلتر
-            </button>
-          )}
-        </div>
-        <div className="d-flex gap-2">
-          {hasPerm('patients', 'print') && (
-            <button className="btn btn-outline-primary btn-sm d-print-none" onClick={() => setShowPrintModal(true)}>
-              <i className="bi bi-printer"></i> طباعة
-            </button>
-          )}
-          {hasPerm('patients', 'add') && (
-            <button className="btn btn-success btn-sm d-print-none" onClick={() => { setEditId(null); setShowModal(true); }}>
-              <i className="bi bi-plus-lg"></i> إضافة
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="collapse mb-2" id="filtersCollapse">
-        <div className="card card-body py-2 px-3">
-          <div className="d-flex flex-wrap gap-1 align-items-center">
-            <button className="btn btn-sm btn-outline-secondary" onClick={() => setFilter(null)}>إلغاء</button>
-            <div className="dropdown me-2">
-              <button className="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                التشخيص
+          <div className="d-flex gap-2">
+            {hasPerm('patients', 'print') && (
+              <button className="btn btn-outline-primary btn-sm d-print-none" onClick={() => setShowPrintModal(true)}>
+                طباعة
               </button>
-              <ul className="dropdown-menu" style={{ maxHeight: 200, overflowY: 'auto' }}>
-                {[...new Set(patients.map(p => p.diagnosis).filter(Boolean))].map(d => (
-                  <li key={d}><a className="dropdown-item small" href="#" onClick={e => { e.preventDefault(); setFilter({ key: 'diagnosis', value: d }); }}>{d}</a></li>
-                ))}
-              </ul>
-            </div>
-            <div className="dropdown me-2">
-              <button className="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                الأمراض الباطنية
+            )}
+            {hasPerm('patients', 'add') && (
+              <button className="btn btn-success btn-sm d-print-none" onClick={() => { setEditId(null); setShowModal(true); }}>
+                إضافة
               </button>
-              <ul className="dropdown-menu" style={{ maxHeight: 200, overflowY: 'auto' }}>
-                {[...new Set(patients.flatMap(p => (p.internalDiseases || '').split(',').map(s => s.trim())).filter(Boolean))].map(d => (
-                  <li key={d}><a className="dropdown-item small" href="#" onClick={e => { e.preventDefault(); setFilter({ key: 'internalDiseases', value: d }); }}>{d}</a></li>
-                ))}
-              </ul>
-            </div>
-            <span className="small text-muted mx-1">|</span>
-            {[
-              { k: 'category', v: 'مجانى', c: 'info' },
-              { k: 'category', v: 'نفقة الدولة', c: 'info' },
-              { k: 'category', v: 'درجة', c: 'info' },
-              { k: 'category', v: 'تأمين', c: 'info' },
-              { k: 'identity', v: 'بطاقة', c: 'warning' },
-              { k: 'identity', v: 'مجهول الهوية', c: 'warning' },
-              { k: 'clozapax', v: 'نعم', c: 'danger', l: 'كلوزابكس' },
-              { k: 'internalPatient', v: 'نعم', c: 'success', l: 'مرضى الباطنة' },
-              { k: 'ageClassification', v: 'فوق 50 عام', c: 'dark' },
-              { k: 'ageClassification', v: 'تحت 50 عام', c: 'dark' },
-            ].map(f => (
-              <button key={`${f.k}-${f.v}`}
-                className={`btn btn-sm ${filter?.key === f.k && filter?.value === f.v ? 'btn-' + f.c : 'btn-outline-' + f.c}`}
-                onClick={() => setFilter({ key: f.k, value: f.v })}>
-                {f.l || f.v}
-              </button>
-            ))}
+            )}
           </div>
         </div>
       </div>
+
+      {showFilters && (
+        <div className="card mb-3 shadow-sm">
+          <div className="card-body py-2">
+            <div className="d-flex flex-wrap align-items-center gap-2">
+              <select className="form-select form-select-sm" style={{ width: 140 }} value={filters.diagnosis}
+                onChange={e => setFilters(f => ({ ...f, diagnosis: e.target.value }))}>
+                <option value="">التشخيص</option>
+                {allDiagnoses.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+              <select className="form-select form-select-sm" style={{ width: 160 }} value={filters.internalDisease}
+                onChange={e => setFilters(f => ({ ...f, internalDisease: e.target.value }))}>
+                <option value="">أمراض باطنية</option>
+                {allDiseases.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+              {['مجانى', 'نفقة الدولة', 'درجة', 'تأمين'].map(c => (
+                <button key={c} className={`btn btn-sm ${filters.category === c ? 'btn-primary' : 'btn-outline-primary'}`}
+                  onClick={() => setFilters(f => ({ ...f, category: f.category === c ? '' : c }))}>{c}</button>
+              ))}
+              {['بطاقة', 'مجهول الهوية'].map(i => (
+                <button key={i} className={`btn btn-sm ${filters.identity === i ? 'btn-primary' : 'btn-outline-primary'}`}
+                  onClick={() => setFilters(f => ({ ...f, identity: f.identity === i ? '' : i }))}>{i}</button>
+              ))}
+              <button className={`btn btn-sm ${filters.clozapax === 'نعم' ? 'btn-primary' : 'btn-outline-primary'}`}
+                onClick={() => setFilters(f => ({ ...f, clozapax: f.clozapax === 'نعم' ? '' : 'نعم' }))}>كلوزاباكس</button>
+              <button className={`btn btn-sm ${filters.internalPatient === 'نعم' ? 'btn-primary' : 'btn-outline-primary'}`}
+                onClick={() => setFilters(f => ({ ...f, internalPatient: f.internalPatient === 'نعم' ? '' : 'نعم' }))}>باطنة</button>
+              {['فوق 50 عام', 'تحت 50 عام'].map(a => (
+                <button key={a} className={`btn btn-sm ${filters.ageClassification === a ? 'btn-primary' : 'btn-outline-primary'}`}
+                  onClick={() => setFilters(f => ({ ...f, ageClassification: f.ageClassification === a ? '' : a }))}>{a}</button>
+              ))}
+              <button className="btn btn-sm btn-outline-danger" onClick={() => setFilters({ diagnosis: '', internalDisease: '', category: '', identity: '', clozapax: '', internalPatient: '', ageClassification: '' })}>
+                <i className="bi bi-arrow-counterclockwise"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="table-responsive">
         <table className="table table-striped table-hover" style={{ whiteSpace: 'nowrap' }}>
           <thead>
             <tr>
-              <th>رقم الملف</th><th>اسم المريض</th><th>تاريخ الدخول</th><th>التشخيص</th>
-              <th>رقم القيد</th><th>الفئة</th><th>الهوية</th><th>الرقم القومي</th>
-              <th>تاريخ الميلاد</th><th>العمر</th><th>تصنيف العمر</th><th>هاتف الاهل</th>
+              <th style={{cursor:'pointer'}} onClick={() => handleSort('fileNumber')}>رقم الملف{sortArrow('fileNumber')}</th>
+              <th style={{cursor:'pointer'}} onClick={() => handleSort('patientName')}>اسم المريض{sortArrow('patientName')}</th>
+              <th>تاريخ الدخول</th><th>التشخيص</th>
+              <th>رقم القيد</th>
+              <th style={{cursor:'pointer'}} onClick={() => handleSort('category')}>الفئة{sortArrow('category')}</th>
+              <th>الهوية</th><th>الرقم القومي</th>
+              <th>تاريخ الميلاد</th><th>العمر</th><th>تصنيف العمر</th><th>ت.دخول القسم</th>
               <th>كلوزاباكس</th><th>مريض باطنة</th><th>الأمراض الباطنية</th>
               <th>الحالة</th>
+              <th>تاريخ الإجازة</th><th>تاريخ العودة</th><th>حالة الإجازة</th>
               <th>الإجراءات</th>
             </tr>
           </thead>
           <tbody>
-            {displayList
-              .filter(p => !search || (p.patientName || '').includes(search) || (p.fileNumber || '').includes(search))
-              .sort((a, b) => parseInt(a.fileNumber || 0) - parseInt(b.fileNumber || 0))
-              .map(p => {
+            {filteredList.map(p => {
                 const today = new Date(); today.setHours(0, 0, 0, 0);
                 let vacStatus = '';
                 let rowClass = '';
@@ -213,13 +230,22 @@ export default function PatientsTab({ patients, hasPerm, loadPatients, loadExits
                     <td>{formatDate(p.dateOfBirth)}</td>
                     <td>{p.age}</td>
                     <td>{p.ageClassification}</td>
-                    <td>{p.familyPhone}</td>
+                    <td>{formatDate(p.departmentEntryDate)}</td>
                     <td>{p.clozapax}</td>
                     <td>{p.internalPatient}</td>
                     <td>{(p.internalDiseases || '').split(',').map(s => s.trim()).filter(Boolean).map(d =>
                       <span key={d} className="badge bg-primary me-1">{d}</span>
                     )}</td>
                     <td>{p.status}</td>
+                    <td>{formatDate(p.holidayDate)}</td>
+                    <td>{formatDate(p.returnDate)}</td>
+                    <td>
+                      {p.status === 'إجازة' ? (
+                        <span className={`badge ${rowClass === 'table-danger' ? 'bg-danger' : 'bg-warning text-dark'}`}>
+                          {vacStatus}
+                        </span>
+                      ) : '-'}
+                    </td>
                     <td>
                       {hasPerm('patients', 'edit') && (
                         <button className="btn btn-sm btn-outline-primary me-1"
@@ -251,8 +277,8 @@ export default function PatientsTab({ patients, hasPerm, loadPatients, loadExits
 
       {showPrintModal && (
         <PrintModal
-          patients={displayList.filter(p => !search || (p.patientName || '').includes(search) || (p.fileNumber || '').includes(search)).sort((a, b) => parseInt(a.fileNumber || 0) - parseInt(b.fileNumber || 0))}
-          filter={filter}
+          patients={filteredList}
+          filter={null}
           onClose={() => setShowPrintModal(false)}
           onConfirm={(data) => {
             setPrintData(data);
@@ -307,14 +333,17 @@ export default function PatientsTab({ patients, hasPerm, loadPatients, loadExits
 function PatientModal({ patient, onSave, onClose, onDelete }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [selectedDiseases, setSelectedDiseases] = useState([]);
+  const [modalError, setModalError] = useState('');
 
   useEffect(() => {
     if (patient) {
       setForm({ ...EMPTY_FORM, ...patient });
       setSelectedDiseases((patient.internalDiseases || '').split(',').map(s => s.trim()).filter(Boolean));
+      setModalError('');
     } else {
       setForm(EMPTY_FORM);
       setSelectedDiseases([]);
+      setModalError('');
     }
   }, [patient]);
 
@@ -330,17 +359,18 @@ function PatientModal({ patient, onSave, onClose, onDelete }) {
 
   const calculateAge = () => {
     if (!form.nationalId || form.nationalId.length !== 14) {
-      alert('الرجاء إدخال رقم قومي صحيح مكون من 14 رقم');
+      setModalError('الرجاء إدخال رقم قومي صحيح مكون من 14 رقم');
       return;
     }
     const result = API.calculateAgeFromNationalId(form.nationalId);
-    if (!result.age) { alert('الرقم القومي غير صحيح'); return; }
+    if (!result.age) { setModalError('الرقم القومي غير صحيح'); return; }
     setForm(prev => ({
       ...prev,
       dateOfBirth: result.dateOfBirth,
       age: result.age,
       ageClassification: result.ageClassification,
     }));
+    setModalError('');
   };
 
   const calcReturnDate = () => {
@@ -351,7 +381,7 @@ function PatientModal({ patient, onSave, onClose, onDelete }) {
     else if (form.vacationDurationType === 'أسبوعين') days = 14;
     else if (form.vacationDurationType === 'عدد') {
       days = parseInt(form.vacationDays);
-      if (!days || days < 1) return;
+      if (!days || days < 1) { setModalError('الرجاء إدخال عدد أيام صالح للإجازة'); return; }
     } else return;
 
     const returnDate = new Date(start);
@@ -367,6 +397,12 @@ function PatientModal({ patient, onSave, onClose, onDelete }) {
     if (e) e.preventDefault();
     const required = ['patientName', 'dateOfEntry', 'diagnosis', 'enrolmentNumber', 'fileNumber',
       'category', 'identity', 'ageClassification', 'clozapax', 'internalPatient'];
+    const fieldLabels = {
+      patientName: 'اسم المريض', dateOfEntry: 'تاريخ الدخول', diagnosis: 'التشخيص', enrolmentNumber: 'رقم القيد', fileNumber: 'رقم الملف',
+      category: 'التصنيف', identity: 'الهوية', ageClassification: 'تصنيف العمر', clozapax: 'كلوزاباكس', internalPatient: 'مريض باطنة',
+      internalDiseases: 'الأمراض الباطنية', outDate: 'تاريخ الخروج', outType: 'نوع الخروج', holidayDate: 'تاريخ بداية الإجازة'
+    };
+
     const missing = required.filter(k => !form[k] || !String(form[k]).trim());
     if (form.internalPatient === 'نعم' && selectedDiseases.length === 0) {
       missing.push('internalDiseases');
@@ -378,9 +414,11 @@ function PatientModal({ patient, onSave, onClose, onDelete }) {
     if (form.status === 'إجازة' && !form.holidayDate) missing.push('holidayDate');
 
     if (missing.length) {
-      alert('الحقول المطلوبة مفقودة: ' + missing.join('، '));
+      const msgs = missing.map(m => fieldLabels[m] || m);
+      setModalError('الحقول المطلوبة مفقودة: ' + msgs.join('، '));
       return;
     }
+    setModalError('');
     onSave(form, selectedDiseases);
   };
 
@@ -398,63 +436,67 @@ function PatientModal({ patient, onSave, onClose, onDelete }) {
       <div className="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title">{patient ? 'تعديل بيانات المريض' : 'إضافة مريض جديد'}</h5>
+            <h5 className="modal-title">إدارة المريض</h5>
             <button type="button" className="btn-close" onClick={onClose}></button>
           </div>
           <div className="modal-body">
-            <form id="patientForm" onSubmit={handleSubmit}>
-              <div className="row">
-                <div className="col-md-4 mb-3">
+            <form onSubmit={handleSubmit}>
+              {/* الحقول الأساسية للمريض */}
+              <div className="row mb-3">
+                <div className="col-md-6">
                   <label className="form-label">اسم المريض *</label>
                   <input type="text" className="form-control" value={form.patientName}
-                    onChange={e => handleChange('patientName', e.target.value)} required />
+                    onChange={e => handleChange('patientName', e.target.value)} />
                 </div>
-                <div className="col-md-4 mb-3">
-                  <label className="form-label">تاريخ الدخول *</label>
-                  <input type="date" className="form-control" value={form.dateOfEntry}
-                    onChange={e => handleChange('dateOfEntry', e.target.value)} lang="en-GB" required />
-                </div>
-                <div className="col-md-4 mb-3">
-                  <label className="form-label">هاتف الاهل</label>
-                  <input type="tel" className="form-control" value={form.familyPhone}
-                    onChange={e => handleChange('familyPhone', e.target.value)} />
-                </div>
-              </div>
-              <div className="mb-3">
-                <label className="form-label">التشخيص *</label>
-                <input type="text" className="form-control" value={form.diagnosis}
-                  onChange={e => handleChange('diagnosis', e.target.value)} required />
-              </div>
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">رقم القيد *</label>
-                  <input type="text" className="form-control" value={form.enrolmentNumber}
-                    onChange={e => handleChange('enrolmentNumber', e.target.value)} required />
-                </div>
-                <div className="col-md-6 mb-3">
+                <div className="col-md-3">
                   <label className="form-label">رقم الملف *</label>
                   <input type="text" className="form-control" value={form.fileNumber}
-                    onChange={e => handleChange('fileNumber', e.target.value)} required />
+                    onChange={e => handleChange('fileNumber', e.target.value)} />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label">رقم القيد *</label>
+                  <input type="text" className="form-control" value={form.enrolmentNumber}
+                    onChange={e => handleChange('enrolmentNumber', e.target.value)} />
                 </div>
               </div>
-              <div className="mb-3">
-                <label className="form-label">التصنيف *</label>
-                <div className="btn-group w-100">
-                  {CATEGORIES.map(v => (
-                    <button key={v} type="button" className={btnClass('category', v)}
-                      onClick={() => handleChange('category', v)}>{v}</button>
-                  ))}
+
+              <div className="row mb-3">
+                <div className="col-md-4">
+                  <label className="form-label">تاريخ الدخول *</label>
+                  <input type="date" className="form-control" value={form.dateOfEntry}
+                    onChange={e => handleChange('dateOfEntry', e.target.value)} lang="en-GB" />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label">الفئة *</label>
+                  <select className="form-select" value={form.category}
+                    onChange={e => handleChange('category', e.target.value)}>
+                    <option value="">-- اختر --</option>
+                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label">الهوية *</label>
+                  <select className="form-select" value={form.identity}
+                    onChange={e => handleChange('identity', e.target.value)}>
+                    <option value="">-- اختر --</option>
+                    {IDENTITIES.map(i => <option key={i} value={i}>{i}</option>)}
+                  </select>
                 </div>
               </div>
-              <div className="mb-3">
-                <label className="form-label">الهوية *</label>
-                <div className="btn-group w-100">
-                  {IDENTITIES.map(v => (
-                    <button key={v} type="button" className={btnClass('identity', v)}
-                      onClick={() => handleChange('identity', v)}>{v}</button>
-                  ))}
+
+              <div className="row mb-3">
+                <div className="col-md-8">
+                  <label className="form-label">التشخيص *</label>
+                  <input type="text" className="form-control" value={form.diagnosis}
+                    onChange={e => handleChange('diagnosis', e.target.value)} />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label">ت.دخول القسم</label>
+                  <input type="date" className="form-control" value={form.departmentEntryDate}
+                    onChange={e => handleChange('departmentEntryDate', e.target.value)} />
                 </div>
               </div>
+
               {showNational && (
                 <div className="row mb-3">
                   <div className="col-md-8">
@@ -469,9 +511,9 @@ function PatientModal({ patient, onSave, onClose, onDelete }) {
                   </div>
                 </div>
               )}
-              {showBirth && (
+              {showBirth ? (
                 <div className="row mb-3">
-                  <div className="col-md-4">
+                  <div className="col-md-5">
                     <label className="form-label">تاريخ الميلاد</label>
                     <input type="date" className="form-control" value={form.dateOfBirth}
                       onChange={e => handleChange('dateOfBirth', e.target.value)} lang="en-GB" />
@@ -481,7 +523,7 @@ function PatientModal({ patient, onSave, onClose, onDelete }) {
                     <input type="number" className="form-control" value={form.age}
                       onChange={e => handleChange('age', e.target.value)} />
                   </div>
-                  <div className="col-md-5">
+                  <div className="col-md-4">
                     <label className="form-label">تصنيف العمر *</label>
                     <div className="btn-group w-100">
                       {AGE_CLASS.map(v => (
@@ -490,6 +532,17 @@ function PatientModal({ patient, onSave, onClose, onDelete }) {
                       ))}
                     </div>
                   </div>
+                </div>
+              ) : (
+                <div className="mb-3">
+                  <label className="form-label">تصنيف العمر *</label>
+                  <div className="btn-group w-100">
+                    {AGE_CLASS.map(v => (
+                      <button key={v} type="button" className={btnClass('ageClassification', v)}
+                        onClick={() => handleChange('ageClassification', v)}>{v}</button>
+                    ))}
+                  </div>
+                  <div className="form-text text-muted">المريض مجهول الهوية - اختر التصنيف المناسب من شكله</div>
                 </div>
               )}
               <div className="mb-3">
@@ -613,12 +666,12 @@ function PatientModal({ patient, onSave, onClose, onDelete }) {
 
 function PrintModal({ patients, filter, onClose, onConfirm }) {
   const [cols, setCols] = useState({
-    fileNumber: true, patientName: true, dateOfEntry: true, diagnosis: true, enrolmentNumber: true, category: true, identity: true, nationalId: true, dateOfBirth: true, age: true, ageClassification: true, familyPhone: true, clozapax: true, internalPatient: true, internalDiseases: true, status: true
+    fileNumber: true, patientName: true, dateOfEntry: true, diagnosis: true, enrolmentNumber: true, category: true, identity: true, nationalId: true, dateOfBirth: true, age: true, ageClassification: true, departmentEntryDate: true, clozapax: true, internalPatient: true, internalDiseases: true, status: true
   });
   const [loading, setLoading] = useState(false);
 
   const colLabels = {
-    fileNumber: 'رقم الملف', patientName: 'اسم المريض', dateOfEntry: 'تاريخ الدخول', diagnosis: 'التشخيص', enrolmentNumber: 'رقم القيد', category: 'الفئة', identity: 'الهوية', nationalId: 'الرقم القومي', dateOfBirth: 'تاريخ الميلاد', age: 'العمر', ageClassification: 'تصنيف العمر', familyPhone: 'هاتف الاهل', clozapax: 'كلوزاباكس', internalPatient: 'مريض باطنة', internalDiseases: 'الأمراض الباطنية', status: 'الحالة'
+    fileNumber: 'رقم الملف', patientName: 'اسم المريض', dateOfEntry: 'تاريخ الدخول', diagnosis: 'التشخيص', enrolmentNumber: 'رقم القيد', category: 'الفئة', identity: 'الهوية', nationalId: 'الرقم القومي', dateOfBirth: 'تاريخ الميلاد', age: 'العمر', ageClassification: 'تصنيف العمر', departmentEntryDate: 'ت.دخول القسم', clozapax: 'كلوزاباكس', internalPatient: 'مريض باطنة', internalDiseases: 'الأمراض الباطنية', status: 'الحالة'
   };
 
   const handlePrint = () => {
@@ -660,4 +713,6 @@ function PrintModal({ patients, filter, onClose, onConfirm }) {
     </div>
   );
 }
+
+
 

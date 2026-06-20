@@ -57,7 +57,7 @@ function mapPatientRow(row) {
     dateOfBirth: row.date_of_birth,
     age: row.age,
     ageClassification: row.age_classification,
-    familyPhone: row.family_phone,
+    departmentEntryDate: row.department_entry_date,
     clozapax: row.clozapax,
     internalPatient: row.internal_patient,
     internalDiseases: row.internal_diseases,
@@ -106,21 +106,30 @@ export async function loginUser(email, password = null, checkOnly = false) {
 }
 
 export async function createAccount(name, email, password, phone) {
-  // تشفير ID قصير
-  const id = 'u-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
-  const { error } = await supabase().from('accounts').insert({
-    id, name, email, password: String(password || ''), phone: phone || '',
-    approved: 'انتظار المراجعة',
-    position: 'مستخدم',
-    ...permDefaults(),
-  });
-  if (error) return { success: false, message: error.message };
-  return { success: true, message: 'تم إنشاء الحساب بنجاح، يرجى انتظار مراجعة المدير' };
+  try {
+    // تحقق من وجود إيميل مكرر
+    const { data: existing, error: checkErr } = await supabase().from('accounts').select('id').eq('email', email).limit(1);
+    if (checkErr) throw checkErr;
+    if (existing && existing.length) return { success: false, message: 'البريد الإلكتروني مستخدم بالفعل' };
+
+    // تشفير ID قصير
+    const id = 'u-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+    const { error } = await supabase().from('accounts').insert({
+      id, name, email, password: String(password || ''), phone: phone || '',
+      approved: 'انتظار المراجعة',
+      position: 'مستخدم',
+      ...permDefaults(),
+    });
+    if (error) return { success: false, message: error.message };
+    return { success: true, message: 'تم إنشاء الحساب بنجاح، يرجى انتظار مراجعة المدير' };
+  } catch (err) {
+    return { success: false, message: err.message || 'فشل إنشاء الحساب' };
+  }
 }
 
 export async function getAllAccountsForLogin() {
   // يجلب فقط id/email/password/approved — مفيد لتجديد الصلاحيات بعد التعديل
-  const { data, error } = await supabase().from('accounts').select('*').eq('email').limit(1);
+  const { data, error } = await supabase().from('accounts').select('id,email,password,approved');
   if (error || !data || !data.length) return null;
   return data[0];
 }
@@ -316,7 +325,7 @@ function buildPatientRow(d) {
     date_of_birth: d.dateOfBirth || null,
     age: d.age,
     age_classification: d.ageClassification,
-    family_phone: d.familyPhone,
+    department_entry_date: d.departmentEntryDate || null,
     clozapax: d.clozapax,
     internal_patient: d.internalPatient,
     internal_diseases: d.internalDiseases,
@@ -350,7 +359,7 @@ function buildExitRow(d) {
     date_of_birth: d.dateOfBirth || null,
     age: d.age,
     age_classification: d.ageClassification,
-    family_phone: d.familyPhone,
+    department_entry_date: d.departmentEntryDate || null,
     clozapax: d.clozapax,
     internal_patient: d.internalPatient,
     internal_diseases: d.internalDiseases,
