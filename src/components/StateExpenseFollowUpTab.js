@@ -72,8 +72,8 @@ export default function StateExpenseFollowUpTab({ patients, hasPerm, loadPatient
 
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-        <h5 className="mb-0">متابعة نفقة الدولة</h5>
+      <div className="d-flex justify-content-start align-items-center mb-2 flex-wrap gap-2">
+        <h5 className="mb-0 ms-3">متابعة نفقة الدولة</h5>
         <div className="d-flex gap-2 align-items-center">
           {copyMsg && <span className="text-success small">{copyMsg}</span>}
           <input type="text" className="form-control form-control-sm" placeholder="بحث..." value={search}

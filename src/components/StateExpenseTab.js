@@ -79,7 +79,7 @@ export default function StateExpenseTab({ patients, hasPerm, loadPatients }) {
 
   return (
     <div>
-      <div dir="rtl" className="d-flex align-items-center mb-3 flex-wrap gap-2 justify-content-end">
+      <div dir="rtl" className="d-flex align-items-center mb-3 flex-wrap gap-2 justify-content-start">
         <div className="d-flex gap-2 align-items-center flex-row-reverse">
           <div className="d-flex align-items-center gap-1 bg-white border rounded px-2 py-1 shadow-sm" style={{ minHeight: '36px' }}>
             <i className="bi bi-calendar3 text-muted"></i>
