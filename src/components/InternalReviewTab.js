@@ -19,7 +19,7 @@ export default function InternalReviewTab({ patients, hasPerm, loadPatients, onE
       await API.updateReviewNumber(id, val || null);
       await loadPatients();
     } catch (err) {
-      alert('خطأ: ' + err.message);
+      window.dispatchEvent(new CustomEvent('show-toast', { detail: { msg: 'خطأ: ' + (err.message || 'حدث خطأ'), type: 'danger' } }));
     }
   };
 

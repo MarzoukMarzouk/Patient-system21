@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "generate-icons": "node scripts/generate-icons.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.0.0",
@@ -19,5 +20,9 @@
     "react": "^19.0.0",
     "react-bootstrap": "^2.10.0",
     "react-dom": "^19.0.0"
+  }
+  ,
+  "devDependencies": {
+    "sharp": "^0.32.1"
   }
 }

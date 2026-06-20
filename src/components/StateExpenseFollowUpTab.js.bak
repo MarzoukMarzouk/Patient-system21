@@ -1,10 +1,9 @@
 ﻿import { useState } from 'react';
 import * as API from '@/lib/api';
 
-export default function StateExpenseTab({ patients, hasPerm, loadPatients }) {
+export default function StateExpenseFollowUpTab({ patients, hasPerm, loadPatients }) {
   const [search, setSearch] = useState('');
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
+  const [dateFilter, setDateFilter] = useState('all'); // 'all', 'empty', 'past', 'today'
   const [copyMsg, setCopyMsg] = useState('');
 
   const handleFieldChange = async (id, field, value) => {
@@ -53,46 +52,67 @@ export default function StateExpenseTab({ patients, hasPerm, loadPatients }) {
     }
   };
 
+  const today = new Date();
+  today.setHours(23, 59, 59, 0);
+
   const displayList = patients
     .filter(p => p.category === 'نفقة الدولة')
+    .filter(p => {
+      // Apply date filter
+      if (dateFilter === 'empty') {
+        return !p.stateExpenseEndDate;
+      } else if (dateFilter === 'past') {
+        if (!p.stateExpenseEndDate) return false;
+        const endDate = new Date(p.stateExpenseEndDate);
+        return endDate < today;
+      } else if (dateFilter === 'today') {
+        if (!p.stateExpenseEndDate) return false;
+        const endDate = new Date(p.stateExpenseEndDate);
+        const todayStart = new Date(today);
+        todayStart.setHours(0, 0, 0, 0);
+        return endDate.toDateString() === todayStart.toDateString();
+      } else {
+        // 'all' - show items with expired or empty dates
+        if (!p.stateExpenseEndDate) return true;
+        const endDate = new Date(p.stateExpenseEndDate);
+        return endDate <= today;
+      }
+    })
     .filter(p => {
       if (!search) return true;
       const q = search.toLowerCase();
       return (p.patientName || '').toLowerCase().includes(q) || String(p.fileNumber || '').includes(q);
     })
-    .filter(p => {
-      // date range filter on stateExpenseEndDate (from/to)
-      if (!fromDate && !toDate) return true;
-      if (!p.stateExpenseEndDate) return false;
-      const d = new Date(p.stateExpenseEndDate + 'T00:00:00');
-      if (fromDate) {
-        const f = new Date(fromDate + 'T00:00:00');
-        if (d < f) return false;
-      }
-      if (toDate) {
-        const t = new Date(toDate + 'T23:59:59');
-        if (d > t) return false;
-      }
-      return true;
-    })
     .sort((a, b) => parseInt(a.fileNumber || 0) - parseInt(b.fileNumber || 0));
 
   return (
     <div>
-      <div dir="rtl" className="d-flex align-items-center mb-3 flex-wrap gap-2 justify-content-end">
-        <div className="d-flex gap-2 align-items-center flex-row-reverse">
-          <div className="d-flex align-items-center gap-1 bg-white border rounded px-2 py-1 shadow-sm" style={{ minHeight: '36px' }}>
-            <i className="bi bi-calendar3 text-muted"></i>
-            <label className="small text-muted mb-0 me-1">من</label>
-            <input type="date" className="form-control form-control-sm border-0 bg-transparent p-0" style={{ width: '130px', boxShadow: 'none' }} value={fromDate} onChange={e => setFromDate(e.target.value)} lang="en-GB" />
-            <span className="text-muted mx-1">—</span>
-            <label className="small text-muted mb-0">إلى</label>
-            <input type="date" className="form-control form-control-sm border-0 bg-transparent p-0" style={{ width: '130px', boxShadow: 'none' }} value={toDate} onChange={e => setToDate(e.target.value)} lang="en-GB" />
-          </div>
+      <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+        <h5 className="mb-0">متابعة نفقة الدولة</h5>
+        <div className="d-flex gap-2 align-items-center">
           {copyMsg && <span className="text-success small">{copyMsg}</span>}
           <input type="text" className="form-control form-control-sm" placeholder="بحث..." value={search}
             onChange={e => setSearch(e.target.value)} style={{ maxWidth: 250 }} />
         </div>
+      </div>
+
+      <div className="mb-3 d-flex gap-2 flex-wrap">
+          <button 
+            className={`btn btn-sm ${dateFilter === 'all' ? 'btn-primary' : 'btn-outline-primary'}`}
+            onClick={() => setDateFilter('all')}
+            aria-label="الكل"></button>
+          <button 
+            className={`btn btn-sm ${dateFilter === 'empty' ? 'btn-warning' : 'btn-outline-warning'}`}
+            onClick={() => setDateFilter('empty')}
+            aria-label="فارغ"></button>
+          <button 
+            className={`btn btn-sm ${dateFilter === 'past' ? 'btn-danger' : 'btn-outline-danger'}`}
+            onClick={() => setDateFilter('past')}
+            aria-label="فات"></button>
+          <button 
+            className={`btn btn-sm ${dateFilter === 'today' ? 'btn-success' : 'btn-outline-success'}`}
+            onClick={() => setDateFilter('today')}
+            aria-label="اليوم"></button>
       </div>
 
       <div className="table-responsive">
@@ -120,7 +140,7 @@ export default function StateExpenseTab({ patients, hasPerm, loadPatients }) {
                   <select className="form-select form-select-sm"
                     value={p.stateExpenseStatus || ''}
                     onChange={e => handleFieldChange(p.id, 'stateExpenseStatus', e.target.value)}
-                    disabled={!hasPerm('state_expense', 'edit')}>
+                    disabled={!hasPerm('state_expense_follow_up', 'edit')}>
                     <option value=""></option>
                     <option value="تم الرفع">تم الرفع</option>
                     <option value="ساري">ساري</option>
@@ -130,10 +150,10 @@ export default function StateExpenseTab({ patients, hasPerm, loadPatients }) {
                   <input type="date" className="form-control form-control-sm"
                     value={p.stateExpenseEndDate || ''}
                     onChange={e => handleFieldChange(p.id, 'stateExpenseEndDate', e.target.value)}
-                    disabled={!hasPerm('state_expense', 'edit')} />
+                    disabled={!hasPerm('state_expense_follow_up', 'edit')} />
                 </td>
                 <td>
-                  {hasPerm('state_expense', 'edit') && (
+                  {hasPerm('state_expense_follow_up', 'edit') && (
                     <button className="btn btn-sm btn-outline-success" title="تجديد +30 يوم" onClick={() => handleRenew(p.id)}>
                       <i className="bi bi-arrow-repeat"></i>
                     </button>
@@ -143,7 +163,7 @@ export default function StateExpenseTab({ patients, hasPerm, loadPatients }) {
                   <input type="text" className="form-control form-control-sm"
                     value={p.stateExpenseNotes || ''}
                     onChange={e => handleFieldChange(p.id, 'stateExpenseNotes', e.target.value)}
-                    disabled={!hasPerm('state_expense', 'edit')} />
+                    disabled={!hasPerm('state_expense_follow_up', 'edit')} />
                 </td>
               </tr>
             ))}
@@ -153,4 +173,3 @@ export default function StateExpenseTab({ patients, hasPerm, loadPatients }) {
     </div>
   );
 }
-

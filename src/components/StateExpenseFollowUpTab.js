@@ -1,8 +1,9 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import * as API from '@/lib/api';
 
 export default function StateExpenseFollowUpTab({ patients, hasPerm, loadPatients }) {
   const [search, setSearch] = useState('');
+  // الفلتر الافتراضي: كل الحالات اللي تاريخ انتهائها فات أو فاضي (لا حاجة لأزرار اختيار)
   const [copyMsg, setCopyMsg] = useState('');
 
   const handleFieldChange = async (id, field, value) => {
@@ -57,6 +58,7 @@ export default function StateExpenseFollowUpTab({ patients, hasPerm, loadPatient
   const displayList = patients
     .filter(p => p.category === 'نفقة الدولة')
     .filter(p => {
+      // الفلتر الافتراضي: كل من انتهت صلاحيته أو لم يحدد له تاريخ نهاية
       if (!p.stateExpenseEndDate) return true;
       const endDate = new Date(p.stateExpenseEndDate);
       return endDate <= today;
@@ -64,14 +66,9 @@ export default function StateExpenseFollowUpTab({ patients, hasPerm, loadPatient
     .filter(p => {
       if (!search) return true;
       const q = search.toLowerCase();
-      return (p.patientName || '').toLowerCase().includes(q) || (p.fileNumber || '').includes(q);
+      return (p.patientName || '').toLowerCase().includes(q) || String(p.fileNumber || '').includes(q);
     })
-    .sort((a, b) => {
-      const catOrder = a => a.category === 'نفقة الدولة' ? 0 : 1;
-      const diff = catOrder(a) - catOrder(b);
-      if (diff !== 0) return diff;
-      return parseInt(a.fileNumber || 0) - parseInt(b.fileNumber || 0);
-    });
+    .sort((a, b) => parseInt(a.fileNumber || 0) - parseInt(b.fileNumber || 0));
 
   return (
     <div>
@@ -84,11 +81,13 @@ export default function StateExpenseFollowUpTab({ patients, hasPerm, loadPatient
         </div>
       </div>
 
+
+
       <div className="table-responsive">
         <table className="table table-hover table-striped align-middle" style={{ whiteSpace: 'nowrap' }}>
           <thead>
             <tr>
-              <th>الملف</th><th>الاسم</th><th>الفئة</th><th>الرقم القومي</th>
+              <th>الملف</th><th>الاسم</th><th>الرقم القومي</th>
               <th>حالة الطلب</th><th>تاريخ النهاية</th><th></th><th>ملاحظات</th>
             </tr>
           </thead>
@@ -97,7 +96,6 @@ export default function StateExpenseFollowUpTab({ patients, hasPerm, loadPatient
               <tr key={p.id}>
                 <td>{p.fileNumber}</td>
                 <td>{p.patientName}</td>
-                <td>{p.category}</td>
                 <td>
                   <div className="d-flex align-items-center gap-1">
                     <button className="btn btn-sm btn-outline-secondary border-0 p-0" onClick={() => handleCopy(p.id)} title="نسخ">
@@ -143,3 +141,6 @@ export default function StateExpenseFollowUpTab({ patients, hasPerm, loadPatient
     </div>
   );
 }
+
+
+

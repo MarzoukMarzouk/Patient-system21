@@ -8,6 +8,8 @@ import UsersTab from './UsersTab';
 import InternalReviewTab from './InternalReviewTab';
 import StatsTab from './StatsTab';
 import MissingNumbersTab from './MissingNumbersTab';
+import AgeStatsTab from './AgeStatsTab';
+import NormalStatsTab from './NormalStatsTab';
 import * as API from '@/lib/api';
 
 export default function Dashboard({ user, patients, exits, onLogout, hasPerm, loadPatients, loadExits, loadAll }) {
