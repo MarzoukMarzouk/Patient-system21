@@ -14,6 +14,31 @@ import * as API from '@/lib/api';
 
 export default function Dashboard({ user, patients, exits, onLogout, hasPerm, loadPatients, loadExits, loadAll }) {
   const [activeTab, setActiveTab] = useState('patients');
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    } else {
+      alert('لتثبيت التطبيق على جهازك:\n- على أندرويد/كروم: اضغط على القائمة (⋮) ثم "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية".\n- على آيفون/سفاري: اضغط زر المشاركة (Share) ثم "إضافة إلى الشاشة الرئيسية".');
+    }
+  };
   const [cpShow, setCpShow] = useState(false);
   const [cpForm, setCpForm] = useState({ old: '', newPw: '', confirm: '' });
   const [cpError, setCpError] = useState('');
