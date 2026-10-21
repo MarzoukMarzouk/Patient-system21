@@ -51,8 +51,8 @@ export default function StateExpenseTable({ list, mode, canEdit, onChange, onCop
     // الملف | زر النسخ | الاسم | التاريخ | زر التجديد | الملاحظات
     return (
       <div className="table-responsive">
-        <style>{`.state-compact th,.state-compact td{padding:.25rem .3rem !important}.state-compact input{padding:.15rem .3rem}.state-compact input[type=date]{min-width:0 !important;width:112px;padding:.15rem .2rem;font-size:.8rem}.state-compact input[type=date]::-webkit-calendar-picker-indicator{order:-1;margin:0 .15rem 0 0;padding:0}`}</style>
-        <table className="table table-sm table-hover table-striped align-middle mb-0 state-compact" style={{ whiteSpace: 'nowrap' }}>
+        <style>{`.state-compact th,.state-compact td{padding:.25rem .2rem !important}.state-compact{width:auto !important}.state-compact input{padding:.15rem .3rem}.state-compact input[type=date]{min-width:0 !important;width:100px;padding:.15rem .2rem;font-size:.8rem}.state-compact input[type=date]::-webkit-calendar-picker-indicator{order:-1;margin:0 .15rem 0 0;padding:0}`}</style>
+        <table className="table table-sm table-hover table-striped align-middle mb-0 state-compact w-auto" style={{ whiteSpace: 'nowrap' }}>
           <thead>
             <tr>
               <th>الملف</th><th></th><th>الاسم</th><th>التاريخ</th><th></th><th>ملاحظات</th>
