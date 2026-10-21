@@ -63,7 +63,7 @@ export default function StateExpenseTable({ list: rawList, mode, canEdit, onChan
     <DateField className="form-control form-control-sm" style={{ minWidth: mode === 'compact' ? 0 : 135, fontSize: mode === 'compact' ? '.8rem' : undefined, padding: '.15rem .35rem' }}
       value={p.stateExpenseEndDate || ''}
       onChange={v => onChange(p.id, 'stateExpenseEndDate', v)}
-      disabled={!canEdit} />
+      disabled={!canEdit} showIcon={mode !== 'compact'} />
   );
   const notesInput = (p) => (
     <input type="text" className="form-control form-control-sm" style={{ minWidth: 90 }}
@@ -135,13 +135,17 @@ export function StateExpenseHeader({ fromDate, setFromDate, toDate, setToDate, s
   return (
     <div dir="rtl" className="d-flex align-items-center mb-2 flex-wrap gap-2 justify-content-start">
       <style>{`.se-search{width:100%;max-width:400px}.se-tabs{width:100%}@media(min-width:768px){.se-search{width:250px}.se-tabs{width:auto}.se-tabs .nav-item{flex:0 0 auto}}`}</style>
-      <div className="d-flex align-items-center gap-1 bg-white border rounded px-2 py-1 shadow-sm" style={{ minHeight: '36px' }}>
-        <i className="bi bi-calendar3 text-muted"></i>
-        <label className="small text-muted mb-0 me-1">من</label>
-        <DateField style={{ width: 100 }} value={fromDate} onChange={setFromDate} />
+      <div className="se-search d-flex align-items-center justify-content-between gap-1 bg-white border rounded px-2 py-1 shadow-sm" style={{ minHeight: '36px' }}>
+        <div className="d-flex align-items-center gap-1">
+          <i className="bi bi-calendar3 text-muted"></i>
+          <label className="small text-muted mb-0 me-1">من</label>
+          <DateField style={{ flex: 1, minWidth: '70px' }} value={fromDate} onChange={setFromDate} />
+        </div>
         <span className="text-muted mx-1">—</span>
-        <label className="small text-muted mb-0">إلى</label>
-        <DateField style={{ width: 100 }} value={toDate} onChange={setToDate} />
+        <div className="d-flex align-items-center gap-1">
+          <label className="small text-muted mb-0">إلى</label>
+          <DateField style={{ flex: 1, minWidth: '70px' }} value={toDate} onChange={setToDate} />
+        </div>
       </div>
       {copyMsg && <span className="text-success small">{copyMsg}</span>}
       <div className="se-search">
@@ -154,12 +158,13 @@ export function StateExpenseHeader({ fromDate, setFromDate, toDate, setToDate, s
 
 // حقل تاريخ يعرض النص بصيغة ثابتة (يوم/شهر/سنة) بدل نص المتصفح المترجم حسب لغة الجهاز،
 // وفوقه حقل التاريخ الأصلي شفاف لفتح منتقي التاريخ
-export function DateField({ value, onChange, disabled, className = '', style }) {
+export function DateField({ value, onChange, disabled, showIcon = true, className = '', style }) {
   const ref = useRef(null);
-  const text = value ? value.split('-').reverse().join('/') : '--/--/----';
+  // عكس الترتيب ليكون سنة / شهر / يوم حسب طلب المستخدم
+  const text = value ? value.split('-').join('/') : '----/--/--';
   return (
-    <div dir="ltr" className={`position-relative d-inline-flex align-items-center gap-1 ${className}`} style={style}>
-      <i className="bi bi-calendar3 text-muted" style={{ fontSize: '.8em' }}></i>
+    <div dir="ltr" className={`position-relative d-inline-flex align-items-center justify-content-center gap-1 ${className}`} style={style}>
+      {showIcon && <i className="bi bi-calendar3 text-muted" style={{ fontSize: '.8em' }}></i>}
       <span className={value ? '' : 'text-muted'}>{text}</span>
       <input ref={ref} type="date" value={value || ''} disabled={disabled}
         onChange={e => onChange(e.target.value)}
