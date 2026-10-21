@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import * as API from '@/lib/api';
 
 export default function StateExpenseFollowUpTab({ patients, hasPerm, loadPatients }) {
@@ -88,7 +88,7 @@ export default function StateExpenseFollowUpTab({ patients, hasPerm, loadPatient
           <thead>
             <tr>
               <th>الملف</th><th>الاسم</th><th>الرقم القومي</th>
-              <th>حالة الطلب</th><th>تاريخ النهاية</th><th></th><th>ملاحظات</th>
+              <th>تاريخ النهاية</th><th></th><th>ملاحظات</th>
             </tr>
           </thead>
           <tbody>
@@ -98,21 +98,11 @@ export default function StateExpenseFollowUpTab({ patients, hasPerm, loadPatient
                 <td>{p.patientName}</td>
                 <td>
                   <div className="d-flex align-items-center gap-1">
-                    <button className="btn btn-sm btn-outline-secondary border-0 p-0" onClick={() => handleCopy(p.id)} title="نسخ">
-                      <i className="bi bi-clipboard"></i>
+                    <button className="btn btn-outline-primary px-3 py-2 fs-5" onClick={() => handleCopy(p.id)} title="نسخ">
+                      <i className="bi bi-clipboard fs-4"></i>
                     </button>
                     {p.nationalId}
                   </div>
-                </td>
-                <td>
-                  <select className="form-select form-select-sm"
-                    value={p.stateExpenseStatus || ''}
-                    onChange={e => handleFieldChange(p.id, 'stateExpenseStatus', e.target.value)}
-                    disabled={!hasPerm('state_expense_follow_up', 'edit')}>
-                    <option value=""></option>
-                    <option value="تم الرفع">تم الرفع</option>
-                    <option value="ساري">ساري</option>
-                  </select>
                 </td>
                 <td>
                   <input type="date" className="form-control form-control-sm"
