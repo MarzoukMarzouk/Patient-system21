@@ -9,6 +9,8 @@ export default function StateExpenseFollowUpTab({ patients, hasPerm, loadPatient
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [viewMode, setViewMode] = useViewMode();
+  const [filterType, setFilterType] = useState('all');
+  const [weekOffset, setWeekOffset] = useState(0);
 
   const handleFieldChange = async (id, field, value) => {
     try {
@@ -86,7 +88,8 @@ export default function StateExpenseFollowUpTab({ patients, hasPerm, loadPatient
   return (
     <div>
       <StateExpenseHeader fromDate={fromDate} setFromDate={setFromDate} toDate={toDate} setToDate={setToDate}
-        search={search} setSearch={setSearch} copyMsg={copyMsg} viewMode={viewMode} setViewMode={setViewMode} />
+        search={search} setSearch={setSearch} copyMsg={copyMsg} viewMode={viewMode} setViewMode={setViewMode}
+        filterType={filterType} setFilterType={setFilterType} weekOffset={weekOffset} setWeekOffset={setWeekOffset} />
       <StateExpenseTable list={displayList} mode={viewMode} canEdit={hasPerm('state_expense_follow_up', 'edit')} onChange={handleFieldChange} onCopy={handleCopy} onRenew={handleRenew} />
     </div>
   );

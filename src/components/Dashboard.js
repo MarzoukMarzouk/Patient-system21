@@ -5,6 +5,7 @@ import StateExpenseFollowUpTab from './StateExpenseFollowUpTab';
 import ExitsTab from './ExitsTab';
 import VacationsTab from './VacationsTab';
 import UsersTab from './UsersTab';
+import SettingsTab from './SettingsTab';
 import InternalReviewTab from './InternalReviewTab';
 import StatsTab from './StatsTab';
 import MissingNumbersTab from './MissingNumbersTab';
@@ -56,6 +57,7 @@ export default function Dashboard({ user, patients, exits, onLogout, hasPerm, lo
     { id: 'missingNumbers', label: 'الأرقام الناقصة', check: () => hasPerm('missing_numbers') },
     { id: 'internalReview', label: 'مراجعة الباطنة', check: () => hasPerm('internal_review') },
     { id: 'users', label: 'المستخدمين', check: () => hasPerm('users') },
+    { id: 'settings', label: 'الإعدادات', check: () => true },
   ].filter(t => t.check());
 
   // تأكد من أن التبويب النشط ضمن المتاحة
@@ -109,6 +111,8 @@ export default function Dashboard({ user, patients, exits, onLogout, hasPerm, lo
         return <MissingNumbersTab patients={patients} />;
       case 'users':
         return <UsersTab user={user} hasPerm={hasPerm} />;
+      case 'settings':
+        return <SettingsTab />;
       default:
         return null;
     }
