@@ -1,4 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <rect width="100%" height="100%" rx="64" fill="#0d6efd" />
-  <text x="50%" y="53%" font-size="220" fill="#fff" text-anchor="middle" font-family="Arial, Helvetica, sans-serif">م</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="pwaGrad512" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0d6efd" />
+      <stop offset="100%" stop-color="#0a58ca" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#pwaGrad512)" />
+  <path d="M256 394S128 309 128 213C128 166.5 166.5 128 213 128C238.5 128 256 141.5 256 141.5S273.5 128 299 128C345.5 128 384 166.5 384 213C384 309 256 394 256 394Z" fill="white" fill-opacity="0.22"/>
+  <path d="M256 394S128 309 128 213C128 166.5 166.5 128 213 128C238.5 128 256 141.5 256 141.5S273.5 128 299 128C345.5 128 384 166.5 384 213C384 309 256 394 256 394Z" stroke="white" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M168 224H208L232 160L272 288L296 224H344" stroke="white" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

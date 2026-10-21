@@ -38,7 +38,7 @@ export default function RootLayout({ children }) {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
           <title>نظام إدارة المرضى</title>
-          <link rel="manifest" href="/manifest.json" />
+          <link rel="manifest" href="/manifest.json" />`r`n          <link rel="apple-touch-icon" href="/icons/icon-192.png" />
           <meta name="theme-color" content="#0d6efd" />
           <meta name="apple-mobile-web-app-capable" content="yes" />
           <meta name="apple-mobile-web-app-status-bar-style" content="default" />
