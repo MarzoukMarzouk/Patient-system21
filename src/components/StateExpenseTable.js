@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 // عرض مشترك لتبويبي نفقة الدولة ومتابعة نفقة الدولة
 // العرض الحالي (كامل) أو العرض المختصر (الافتراضي على الهاتف)
@@ -60,9 +60,9 @@ export default function StateExpenseTable({ list: rawList, mode, canEdit, onChan
     </button>
   );
   const dateInput = (p) => (
-    <input type="date" className="form-control form-control-sm" style={{ minWidth: 118 }}
+    <DateField className="form-control form-control-sm" style={{ minWidth: mode === 'compact' ? 0 : 135, fontSize: mode === 'compact' ? '.8rem' : undefined, padding: '.15rem .35rem' }}
       value={p.stateExpenseEndDate || ''}
-      onChange={e => onChange(p.id, 'stateExpenseEndDate', e.target.value)}
+      onChange={v => onChange(p.id, 'stateExpenseEndDate', v)}
       disabled={!canEdit} />
   );
   const notesInput = (p) => (
@@ -76,7 +76,7 @@ export default function StateExpenseTable({ list: rawList, mode, canEdit, onChan
     // الملف | زر النسخ | الاسم | التاريخ | زر التجديد | الملاحظات
     return (
       <div className="table-responsive">
-        <style>{`.state-compact th,.state-compact td{padding:.25rem .2rem !important}.state-compact{width:auto !important}.state-compact input{padding:.15rem .3rem}.state-compact input[type=date]{min-width:0 !important;width:100px;padding:.15rem .2rem;font-size:.8rem}.state-compact input[type=date]::-webkit-calendar-picker-indicator{order:-1;margin:0 .15rem 0 0;padding:0}`}</style>
+        <style>{`.state-compact th,.state-compact td{padding:.25rem .2rem !important}.state-compact{width:auto !important}.state-compact input{padding:.15rem .3rem}`}</style>
         <table className="table table-sm table-hover table-striped align-middle mb-0 state-compact w-auto" style={{ whiteSpace: 'nowrap' }}>
           <thead>
             <tr>
@@ -138,16 +138,33 @@ export function StateExpenseHeader({ fromDate, setFromDate, toDate, setToDate, s
       <div className="d-flex align-items-center gap-1 bg-white border rounded px-2 py-1 shadow-sm" style={{ minHeight: '36px' }}>
         <i className="bi bi-calendar3 text-muted"></i>
         <label className="small text-muted mb-0 me-1">من</label>
-        <input type="date" className="form-control form-control-sm border-0 bg-transparent p-0" style={{ width: '130px', boxShadow: 'none' }} value={fromDate} onChange={e => setFromDate(e.target.value)} lang="en-GB" />
+        <DateField style={{ width: 100 }} value={fromDate} onChange={setFromDate} />
         <span className="text-muted mx-1">—</span>
         <label className="small text-muted mb-0">إلى</label>
-        <input type="date" className="form-control form-control-sm border-0 bg-transparent p-0" style={{ width: '130px', boxShadow: 'none' }} value={toDate} onChange={e => setToDate(e.target.value)} lang="en-GB" />
+        <DateField style={{ width: 100 }} value={toDate} onChange={setToDate} />
       </div>
       {copyMsg && <span className="text-success small">{copyMsg}</span>}
       <div className="se-search">
         <input type="text" className="form-control form-control-sm" placeholder="بحث..." value={search} onChange={e => setSearch(e.target.value)} />
       </div>
       <ViewTabs mode={viewMode} setMode={setViewMode} />
+    </div>
+  );
+}
+
+// حقل تاريخ يعرض النص بصيغة ثابتة (يوم/شهر/سنة) بدل نص المتصفح المترجم حسب لغة الجهاز،
+// وفوقه حقل التاريخ الأصلي شفاف لفتح منتقي التاريخ
+export function DateField({ value, onChange, disabled, className = '', style }) {
+  const ref = useRef(null);
+  const text = value ? value.split('-').reverse().join('/') : '--/--/----';
+  return (
+    <div dir="ltr" className={`position-relative d-inline-flex align-items-center gap-1 ${className}`} style={style}>
+      <i className="bi bi-calendar3 text-muted" style={{ fontSize: '.8em' }}></i>
+      <span className={value ? '' : 'text-muted'}>{text}</span>
+      <input ref={ref} type="date" value={value || ''} disabled={disabled}
+        onChange={e => onChange(e.target.value)}
+        onClick={() => { try { ref.current && ref.current.showPicker && ref.current.showPicker(); } catch {} }}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: disabled ? 'default' : 'pointer', padding: 0, border: 0 }} />
     </div>
   );
 }
