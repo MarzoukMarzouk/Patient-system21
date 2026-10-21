@@ -12,7 +12,7 @@ export function useViewMode() {
 
 export function ViewTabs({ mode, setMode }) {
   return (
-    <ul className="nav nav-pills nav-fill mb-2 w-100">
+    <ul className="nav nav-pills nav-fill se-tabs">
       <li className="nav-item">
         <button type="button" className={`nav-link py-1 ${mode === 'compact' ? 'active' : ''}`} onClick={() => setMode('compact')}>الهاتف</button>
       </li>
@@ -126,6 +126,28 @@ export default function StateExpenseTable({ list: rawList, mode, canEdit, onChan
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+// رأس الصفحة المشترك: التاريخ + البحث + تابين (هاتف / ويندوز) على خط واحد في الشاشات الكبيرة
+export function StateExpenseHeader({ fromDate, setFromDate, toDate, setToDate, search, setSearch, copyMsg, viewMode, setViewMode }) {
+  return (
+    <div dir="rtl" className="d-flex align-items-center mb-2 flex-wrap gap-2 justify-content-start">
+      <style>{`.se-search{width:100%;max-width:400px}.se-tabs{width:100%}@media(min-width:768px){.se-search{width:250px}.se-tabs{width:auto}.se-tabs .nav-item{flex:0 0 auto}}`}</style>
+      <div className="d-flex align-items-center gap-1 bg-white border rounded px-2 py-1 shadow-sm" style={{ minHeight: '36px' }}>
+        <i className="bi bi-calendar3 text-muted"></i>
+        <label className="small text-muted mb-0 me-1">من</label>
+        <input type="date" className="form-control form-control-sm border-0 bg-transparent p-0" style={{ width: '130px', boxShadow: 'none' }} value={fromDate} onChange={e => setFromDate(e.target.value)} lang="en-GB" />
+        <span className="text-muted mx-1">—</span>
+        <label className="small text-muted mb-0">إلى</label>
+        <input type="date" className="form-control form-control-sm border-0 bg-transparent p-0" style={{ width: '130px', boxShadow: 'none' }} value={toDate} onChange={e => setToDate(e.target.value)} lang="en-GB" />
+      </div>
+      {copyMsg && <span className="text-success small">{copyMsg}</span>}
+      <div className="se-search">
+        <input type="text" className="form-control form-control-sm" placeholder="بحث..." value={search} onChange={e => setSearch(e.target.value)} />
+      </div>
+      <ViewTabs mode={viewMode} setMode={setViewMode} />
     </div>
   );
 }

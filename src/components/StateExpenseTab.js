@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import * as API from '@/lib/api';
-import StateExpenseTable, { ViewTabs, useViewMode } from './StateExpenseTable';
+import StateExpenseTable, { StateExpenseHeader, useViewMode } from './StateExpenseTable';
 
 export default function StateExpenseTab({ patients, hasPerm, loadPatients }) {
   const [search, setSearch] = useState('');
@@ -81,24 +81,9 @@ export default function StateExpenseTab({ patients, hasPerm, loadPatients }) {
 
   return (
     <div>
-      <div dir="rtl" className="d-flex align-items-center mb-3 flex-wrap gap-2 justify-content-start">
-        <div className="d-flex gap-2 align-items-center flex-row-reverse flex-wrap w-100">
-          <div className="d-flex align-items-center gap-1 bg-white border rounded px-2 py-1 shadow-sm" style={{ minHeight: '36px' }}>
-            <i className="bi bi-calendar3 text-muted"></i>
-            <label className="small text-muted mb-0 me-1">من</label>
-            <input type="date" className="form-control form-control-sm border-0 bg-transparent p-0" style={{ width: '130px', boxShadow: 'none' }} value={fromDate} onChange={e => setFromDate(e.target.value)} lang="en-GB" />
-            <span className="text-muted mx-1">—</span>
-            <label className="small text-muted mb-0">إلى</label>
-            <input type="date" className="form-control form-control-sm border-0 bg-transparent p-0" style={{ width: '130px', boxShadow: 'none' }} value={toDate} onChange={e => setToDate(e.target.value)} lang="en-GB" />
-          </div>
-          {copyMsg && <span className="text-success small">{copyMsg}</span>}
-          <div className="w-100" style={{ maxWidth: 400 }}><input type="text" className="form-control form-control-sm" placeholder="بحث..." value={search} onChange={e => setSearch(e.target.value)} /></div>
-        </div>
-      </div>
-
-      <ViewTabs mode={viewMode} setMode={setViewMode} />
+      <StateExpenseHeader fromDate={fromDate} setFromDate={setFromDate} toDate={toDate} setToDate={setToDate}
+        search={search} setSearch={setSearch} copyMsg={copyMsg} viewMode={viewMode} setViewMode={setViewMode} />
       <StateExpenseTable list={displayList} mode={viewMode} canEdit={hasPerm('state_expense', 'edit')} onChange={handleFieldChange} onCopy={handleCopy} onRenew={handleRenew} />
     </div>
   );
 }
-
