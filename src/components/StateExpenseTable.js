@@ -205,25 +205,37 @@ export function StateExpenseHeader({
 
       <div className="d-flex flex-column gap-2">
         <style>{`
-          .seh-bar {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            padding-bottom: 2px;
-          }
-          .seh-dates-search {
+          .seh-row {
             display: flex;
             align-items: center;
             gap: 8px;
             flex-wrap: wrap;
           }
+          .seh-tabs-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: nowrap;
+          }
           .seh-dates {
-            flex: 1 1 240px;
+            min-width: 250px;
           }
           .seh-search {
-            flex: 1 1 180px;
+            width: 180px;
+          }
+          @media (max-width: 991px) {
+            .seh-tabs-group {
+              width: 100%;
+              justify-content: space-between;
+              overflow-x: auto;
+              padding-bottom: 2px;
+            }
+            .seh-dates {
+              flex: 1 1 240px;
+            }
+            .seh-search {
+              flex: 1 1 160px;
+            }
           }
           @media (max-width: 767px) {
             .seh-dates, .seh-search {
@@ -233,9 +245,10 @@ export function StateExpenseHeader({
           }
         `}</style>
 
-        {/* السطر الأول: الأربع تابات في سطر واحد بدون أن ينزلوا لسطر جديد + العداد */}
-        <div className="seh-bar justify-content-between">
-          <div className="d-flex align-items-center gap-2">
+        {/* سطر العناصر: على الكمبيوتر / الشاشات الكبيرة سطر واحد متكامل تماماً */}
+        <div className="seh-row">
+          {/* الأربع تابات معاً */}
+          <div className="seh-tabs-group">
             {/* تاب الكل / أسبوع */}
             <div className="btn-group shadow-sm" role="group">
               <button
@@ -272,11 +285,45 @@ export function StateExpenseHeader({
                 الويندوز
               </button>
             </div>
+
+            {/* على الهاتف يظهر العداد بجانبهم لو الشاشة صغيرة */}
+            {totalCount !== undefined && (
+              <span className="badge bg-secondary rounded-pill px-3 py-1 fs-6 shadow-sm d-lg-none">
+                {totalCount}
+              </span>
+            )}
           </div>
 
-          {/* عدد النتائج فقط كبادج أنيق دون عنوان بجانبهم */}
+          {/* التواريخ: من - إلى */}
+          <div className="seh-dates d-flex align-items-center justify-content-between gap-1 bg-white border rounded px-2 py-1 shadow-sm" style={{ minHeight: '36px' }}>
+            <div className="d-flex align-items-center gap-1">
+              <i className="bi bi-calendar3 text-muted"></i>
+              <label className="small text-muted mb-0 me-1">من</label>
+              <DateField style={{ minWidth: '75px' }} value={fromDate} onChange={setFromDate} />
+            </div>
+            <span className="text-muted mx-1">—</span>
+            <div className="d-flex align-items-center gap-1">
+              <label className="small text-muted mb-0">إلى</label>
+              <DateField style={{ minWidth: '75px' }} value={toDate} onChange={setToDate} />
+            </div>
+          </div>
+
+          {/* حقل البحث */}
+          <div className="seh-search">
+            <input
+              type="text"
+              className="form-control form-control-sm"
+              placeholder="بحث..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+
+          {copyMsg && <span className="text-success small fw-bold text-nowrap">{copyMsg}</span>}
+
+          {/* على الشاشات الكبيرة يظهر العداد في الطرف الأيسر بنفس السطر */}
           {totalCount !== undefined && (
-            <span className="badge bg-secondary rounded-pill px-3 py-2 fs-6 shadow-sm">
+            <span className="badge bg-secondary rounded-pill px-3 py-2 fs-6 shadow-sm ms-auto d-none d-lg-inline-block">
               {totalCount}
             </span>
           )}
@@ -284,7 +331,7 @@ export function StateExpenseHeader({
 
         {/* سطر تنقل الأسابيع إن كان مفعل أسبوع */}
         {filterType === 'week' && (
-          <div className="d-flex align-items-center justify-content-between gap-1 bg-white border rounded px-2 py-1 shadow-sm w-100">
+          <div className="d-flex align-items-center justify-content-between gap-1 bg-white border rounded px-2 py-1 shadow-sm w-100" style={{ maxWidth: '450px' }}>
             <button
               className="btn btn-sm btn-outline-secondary py-0 px-2 border-0"
               title="الأسبوع السابق"
@@ -313,34 +360,6 @@ export function StateExpenseHeader({
             )}
           </div>
         )}
-
-        {/* سطر التواريخ والبحث */}
-        <div className="seh-dates-search">
-          <div className="seh-dates d-flex align-items-center justify-content-between gap-1 bg-white border rounded px-2 py-1 shadow-sm" style={{ minHeight: '36px' }}>
-            <div className="d-flex align-items-center gap-1">
-              <i className="bi bi-calendar3 text-muted"></i>
-              <label className="small text-muted mb-0 me-1">من</label>
-              <DateField style={{ minWidth: '75px' }} value={fromDate} onChange={setFromDate} />
-            </div>
-            <span className="text-muted mx-1">—</span>
-            <div className="d-flex align-items-center gap-1">
-              <label className="small text-muted mb-0">إلى</label>
-              <DateField style={{ minWidth: '75px' }} value={toDate} onChange={setToDate} />
-            </div>
-          </div>
-
-          <div className="seh-search">
-            <input
-              type="text"
-              className="form-control form-control-sm"
-              placeholder="بحث..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-          </div>
-
-          {copyMsg && <span className="text-success small fw-bold text-nowrap">{copyMsg}</span>}
-        </div>
       </div>
     </div>
   );
