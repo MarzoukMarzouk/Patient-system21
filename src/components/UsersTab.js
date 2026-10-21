@@ -13,6 +13,7 @@ const PERM_MODULES = [
   { module: 'internal_review', label: 'مراجعة الباطنة', actions: ['show', 'edit_order', 'actions'] },
   { module: 'state_expense', label: 'نفقة الدولة', actions: ['show', 'edit'] },
   { module: 'state_expense_follow_up', label: 'متابعة نفقة الدولة', actions: ['show', 'edit'] },
+  { module: 'settings', label: 'الإعدادات', actions: ['show', 'edit'] },
 ];
 
 const ACTION_LABELS = {
@@ -31,6 +32,7 @@ const HEADER_COLORS = {
   vacations: 'danger',
   internal_review: 'success',
   state_expense: 'primary',
+  settings: 'secondary',
 };
 
 export default function UsersTab({ user, hasPerm }) {

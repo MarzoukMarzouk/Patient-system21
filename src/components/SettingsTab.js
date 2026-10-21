@@ -18,7 +18,8 @@ export function getWeekStartDay() {
   return saved !== null ? parseInt(saved, 10) : 1;
 }
 
-export default function SettingsTab() {
+export default function SettingsTab({ hasPerm, user }) {
+  const canEdit = user?.position === 'مدير' || (hasPerm ? hasPerm('settings', 'edit') : true);
   const [weekStart, setWeekStart] = useState(1);
   const [savedMsg, setSavedMsg] = useState(false);
 
@@ -58,7 +59,7 @@ export default function SettingsTab() {
               className="form-select form-select-lg border-primary shadow-sm"
               style={{ maxWidth: '250px' }}
               value={weekStart}
-              onChange={(e) => handleSave(e.target.value)}
+              onChange={(e) => handleSave(e.target.value)} disabled={!canEdit}
             >
               {DAYS_OF_WEEK.map((d) => (
                 <option key={d.value} value={d.value}>
