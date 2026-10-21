@@ -85,7 +85,7 @@ export default function StateExpenseTab({ patients, hasPerm, loadPatients }) {
     <div>
       <StateExpenseHeader fromDate={fromDate} setFromDate={setFromDate} toDate={toDate} setToDate={setToDate}
         search={search} setSearch={setSearch} copyMsg={copyMsg} viewMode={viewMode} setViewMode={setViewMode}
-        filterType={filterType} setFilterType={setFilterType} weekOffset={weekOffset} setWeekOffset={setWeekOffset} />
+        filterType={filterType} setFilterType={setFilterType} weekOffset={weekOffset} setWeekOffset={setWeekOffset} totalCount={displayList.length} />
       <StateExpenseTable list={displayList} mode={viewMode} canEdit={hasPerm('state_expense', 'edit')} onChange={handleFieldChange} onCopy={handleCopy} onRenew={handleRenew} />
     </div>
   );

@@ -136,7 +136,7 @@ export function StateExpenseHeader({
   search, setSearch, copyMsg,
   viewMode, setViewMode,
   filterType, setFilterType,
-  weekOffset, setWeekOffset
+  weekOffset, setWeekOffset, totalCount
 }) {
   const [weekRange, setWeekRange] = useState({ label: '', startStr: '', endStr: '' });
 
@@ -203,29 +203,88 @@ export function StateExpenseHeader({
         }
       `}</style>
 
-      <div className="seh-container">
-        {/* 1. تاب الكل / أسبوع */}
-        <div className="btn-group shadow-sm" role="group">
-          <button
-            type="button"
-            className={`btn btn-sm ${filterType === 'all' ? 'btn-primary fw-bold' : 'btn-outline-primary bg-white'}`}
-            onClick={() => handleTabChange('all')}
-          >
-            الكل
-          </button>
-          <button
-            type="button"
-            className={`btn btn-sm ${filterType === 'week' ? 'btn-primary fw-bold' : 'btn-outline-primary bg-white'}`}
-            onClick={() => handleTabChange('week')}
-          >
-            <i className="bi bi-calendar-week ms-1"></i>
-            أسبوع
-          </button>
+      <div className="d-flex flex-column gap-2">
+        <style>{`
+          .seh-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 2px;
+          }
+          .seh-dates-search {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+          }
+          .seh-dates {
+            flex: 1 1 240px;
+          }
+          .seh-search {
+            flex: 1 1 180px;
+          }
+          @media (max-width: 767px) {
+            .seh-dates, .seh-search {
+              width: 100%;
+              flex: 1 1 100%;
+            }
+          }
+        `}</style>
+
+        {/* السطر الأول: الأربع تابات في سطر واحد بدون أن ينزلوا لسطر جديد + العداد */}
+        <div className="seh-bar justify-content-between">
+          <div className="d-flex align-items-center gap-2">
+            {/* تاب الكل / أسبوع */}
+            <div className="btn-group shadow-sm" role="group">
+              <button
+                type="button"
+                className={`btn btn-sm px-2 py-1 ${filterType === 'all' ? 'btn-primary fw-bold' : 'btn-outline-primary bg-white'}`}
+                onClick={() => handleTabChange('all')}
+              >
+                الكل
+              </button>
+              <button
+                type="button"
+                className={`btn btn-sm px-2 py-1 ${filterType === 'week' ? 'btn-primary fw-bold' : 'btn-outline-primary bg-white'}`}
+                onClick={() => handleTabChange('week')}
+              >
+                <i className="bi bi-calendar-week ms-1"></i>
+                أسبوع
+              </button>
+            </div>
+
+            {/* تاب الهاتف / الويندوز */}
+            <div className="btn-group shadow-sm" role="group">
+              <button
+                type="button"
+                className={`btn btn-sm px-2 py-1 ${viewMode === 'compact' ? 'btn-primary fw-bold' : 'btn-outline-primary bg-white'}`}
+                onClick={() => setViewMode('compact')}
+              >
+                الهاتف
+              </button>
+              <button
+                type="button"
+                className={`btn btn-sm px-2 py-1 ${viewMode === 'full' ? 'btn-primary fw-bold' : 'btn-outline-primary bg-white'}`}
+                onClick={() => setViewMode('full')}
+              >
+                الويندوز
+              </button>
+            </div>
+          </div>
+
+          {/* عدد النتائج فقط كبادج أنيق دون عنوان بجانبهم */}
+          {totalCount !== undefined && (
+            <span className="badge bg-secondary rounded-pill px-3 py-2 fs-6 shadow-sm">
+              {totalCount}
+            </span>
+          )}
         </div>
 
-        {/* 2. تنقل الأسابيع إن كان مفعل أسبوع */}
+        {/* سطر تنقل الأسابيع إن كان مفعل أسبوع */}
         {filterType === 'week' && (
-          <div className="d-flex align-items-center gap-1 bg-white border rounded px-2 py-1 shadow-sm">
+          <div className="d-flex align-items-center justify-content-between gap-1 bg-white border rounded px-2 py-1 shadow-sm w-100">
             <button
               className="btn btn-sm btn-outline-secondary py-0 px-2 border-0"
               title="الأسبوع السابق"
@@ -255,51 +314,32 @@ export function StateExpenseHeader({
           </div>
         )}
 
-        {/* 3. من - إلى */}
-        <div className="seh-dates d-flex align-items-center justify-content-between gap-1 bg-white border rounded px-2 py-1 shadow-sm" style={{ minHeight: '36px' }}>
-          <div className="d-flex align-items-center gap-1">
-            <i className="bi bi-calendar3 text-muted"></i>
-            <label className="small text-muted mb-0 me-1">من</label>
-            <DateField style={{ minWidth: '75px' }} value={fromDate} onChange={setFromDate} />
+        {/* سطر التواريخ والبحث */}
+        <div className="seh-dates-search">
+          <div className="seh-dates d-flex align-items-center justify-content-between gap-1 bg-white border rounded px-2 py-1 shadow-sm" style={{ minHeight: '36px' }}>
+            <div className="d-flex align-items-center gap-1">
+              <i className="bi bi-calendar3 text-muted"></i>
+              <label className="small text-muted mb-0 me-1">من</label>
+              <DateField style={{ minWidth: '75px' }} value={fromDate} onChange={setFromDate} />
+            </div>
+            <span className="text-muted mx-1">—</span>
+            <div className="d-flex align-items-center gap-1">
+              <label className="small text-muted mb-0">إلى</label>
+              <DateField style={{ minWidth: '75px' }} value={toDate} onChange={setToDate} />
+            </div>
           </div>
-          <span className="text-muted mx-1">—</span>
-          <div className="d-flex align-items-center gap-1">
-            <label className="small text-muted mb-0">إلى</label>
-            <DateField style={{ minWidth: '75px' }} value={toDate} onChange={setToDate} />
+
+          <div className="seh-search">
+            <input
+              type="text"
+              className="form-control form-control-sm"
+              placeholder="بحث..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
           </div>
-        </div>
 
-        {/* 4. حقل البحث */}
-        <div className="seh-search">
-          <input
-            type="text"
-            className="form-control form-control-sm"
-            placeholder="بحث..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-        </div>
-
-        {copyMsg && <span className="text-success small fw-bold text-nowrap">{copyMsg}</span>}
-
-        {/* 5. تابين الهاتف / الويندوز بجانبهم مباشرة */}
-        <div className="seh-viewtabs ms-auto">
-          <div className="btn-group shadow-sm" role="group">
-            <button
-              type="button"
-              className={`btn btn-sm ${viewMode === 'compact' ? 'btn-primary fw-bold' : 'btn-outline-primary bg-white'}`}
-              onClick={() => setViewMode('compact')}
-            >
-              الهاتف
-            </button>
-            <button
-              type="button"
-              className={`btn btn-sm ${viewMode === 'full' ? 'btn-primary fw-bold' : 'btn-outline-primary bg-white'}`}
-              onClick={() => setViewMode('full')}
-            >
-              الويندوز
-            </button>
-          </div>
+          {copyMsg && <span className="text-success small fw-bold text-nowrap">{copyMsg}</span>}
         </div>
       </div>
     </div>
