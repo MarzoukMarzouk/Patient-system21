@@ -23,7 +23,32 @@ export function ViewTabs({ mode, setMode }) {
   );
 }
 
-export default function StateExpenseTable({ list, mode, canEdit, onChange, onCopy, onRenew }) {
+export default function StateExpenseTable({ list: rawList, mode, canEdit, onChange, onCopy, onRenew }) {
+  const [sortKey, setSortKey] = useState('file');
+  const [sortDir, setSortDir] = useState('asc');
+  const toggleSort = (key) => {
+    if (sortKey === key) setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
+    else { setSortKey(key); setSortDir('asc'); }
+  };
+  const list = [...rawList].sort((a, b) => {
+    let r;
+    if (sortKey === 'date') {
+      const da = a.stateExpenseEndDate, db = b.stateExpenseEndDate;
+      if (!da && !db) r = 0;
+      else if (!da) return 1;   // الفارغ دائمًا في الآخر
+      else if (!db) return -1;
+      else r = da < db ? -1 : da > db ? 1 : 0;
+    } else {
+      r = parseInt(a.fileNumber || 0) - parseInt(b.fileNumber || 0);
+    }
+    return sortDir === 'asc' ? r : -r;
+  });
+  const sortIcon = (key) => (
+    <i className={`bi ms-1 ${sortKey === key ? (sortDir === 'asc' ? 'bi-sort-up' : 'bi-sort-down') : 'bi-arrow-down-up text-muted'}`}></i>
+  );
+  const sortTh = (key, label, props = {}) => (
+    <th {...props} role="button" style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort(key)}>{label}{sortIcon(key)}</th>
+  );
   const copyBtn = (id) => (
     <button className="btn btn-sm btn-outline-primary" onClick={() => onCopy(id)} title="نسخ">
       <i className="bi bi-clipboard"></i>
@@ -55,7 +80,7 @@ export default function StateExpenseTable({ list, mode, canEdit, onChange, onCop
         <table className="table table-sm table-hover table-striped align-middle mb-0 state-compact w-auto" style={{ whiteSpace: 'nowrap' }}>
           <thead>
             <tr>
-              <th colSpan={2}>الملف</th><th>الاسم</th><th>التاريخ</th><th></th><th>ملاحظات</th>
+              {sortTh('file', 'الملف', { colSpan: 2 })}<th>الاسم</th>{sortTh('date', 'التاريخ')}<th></th><th>ملاحظات</th>
             </tr>
           </thead>
           <tbody>
@@ -79,8 +104,8 @@ export default function StateExpenseTable({ list, mode, canEdit, onChange, onCop
       <table className="table table-hover table-striped align-middle" style={{ whiteSpace: 'nowrap' }}>
         <thead>
           <tr>
-            <th>الملف</th><th>الاسم</th><th>الرقم القومي</th>
-            <th>تاريخ النهاية</th><th></th><th>ملاحظات</th>
+            {sortTh('file', 'الملف')}<th>الاسم</th><th>الرقم القومي</th>
+            {sortTh('date', 'تاريخ النهاية')}<th></th><th>ملاحظات</th>
           </tr>
         </thead>
         <tbody>
