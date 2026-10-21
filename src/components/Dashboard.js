@@ -104,6 +104,10 @@ export default function Dashboard({ user, patients, exits, onLogout, hasPerm, lo
               مرحباً، {user.name}
               {user.position === 'مدير' && <span className="badge bg-warning text-dark ms-1">مدير</span>}
             </span>
+                        <button className="btn btn-warning btn-sm fw-bold d-flex align-items-center gap-1 shadow-sm" onClick={handleInstallClick} title="تثبيت التطبيق على الجهاز">
+              <i className="bi bi-download"></i>
+              <span className="d-none d-sm-inline">تثبيت التطبيق</span>
+            </button>
             <button className="btn btn-outline-light btn-sm" onClick={() => {
               setCpShow(true); setCpError(''); setCpInfo(''); setCpForm({ old: '', newPw: '', confirm: '' });
             }} title="تغيير كلمة المرور">

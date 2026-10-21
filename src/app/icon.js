@@ -16,13 +16,11 @@ export default function Icon() {
           justifyContent: 'center',
           background: 'linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%)',
           borderRadius: '16px',
-          position: 'relative',
         }}
       >
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-          <rect x="16" y="6" width="8" height="28" rx="4" fill="white" />
-          <rect x="6" y="16" width="28" height="8" rx="4" fill="white" />
-          <path d="M9 20h6l3-8 6 16 3-8h4" stroke="#0d6efd" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <svg width="42" height="42" viewBox="0 0 64 64" fill="none">
+          <path d="M32 49S16 38.5 16 26.5C16 20.7 20.7 16 26.5 16C29.6 16 32 17.5 32 17.5S34.4 16 37.5 16C43.3 16 48 20.7 48 26.5C48 38.5 32 49 32 49Z" fill="rgba(255,255,255,0.2)" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M21 28H26L29 20L34 36L37 28H43" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
     ),

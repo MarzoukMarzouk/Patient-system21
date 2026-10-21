@@ -6,11 +6,9 @@
     </linearGradient>
   </defs>
   <rect width="64" height="64" rx="16" fill="url(#medGrad)"/>
-  <!-- Shield/Care outline & Cross with Pulse -->
-  <path d="M32 10C32 10 46 13 48 24C50 36 39 49 32 54C25 49 14 36 16 24C18 13 32 10 32 10Z" fill="white" fill-opacity="0.16"/>
-  <!-- Modern medical cross with rounded corners -->
-  <rect x="28" y="19" width="8" height="26" rx="4" fill="white"/>
-  <rect x="19" y="28" width="26" height="8" rx="4" fill="white"/>
-  <!-- Heartbeat ECG line accent in middle -->
-  <path d="M22 32H27L29.5 25L34.5 39L37 32H42" stroke="#0d6efd" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Elegant Medical Heart & Pulse -->
+  <path d="M32 49S16 38.5 16 26.5C16 20.7 20.7 16 26.5 16C29.6 16 32 17.5 32 17.5S34.4 16 37.5 16C43.3 16 48 20.7 48 26.5C48 38.5 32 49 32 49Z" fill="white" fill-opacity="0.2"/>
+  <path d="M32 49S16 38.5 16 26.5C16 20.7 20.7 16 26.5 16C29.6 16 32 17.5 32 17.5S34.4 16 37.5 16C43.3 16 48 20.7 48 26.5C48 38.5 32 49 32 49Z" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Pulse Line inside heart -->
+  <path d="M21 28H26L29 20L34 36L37 28H43" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
