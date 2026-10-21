@@ -77,7 +77,8 @@ export default function StateExpenseFollowUpTab({ patients, hasPerm, loadPatient
     .filter(p => {
       // فلتر نطاق التاريخ (من/إلى) على تاريخ النهاية
       if (!fromDate && !toDate) return true;
-      if (!p.stateExpenseEndDate) return false;
+      // الحالات التي ليس لها تاريخ نهاية تظهر دائماً في أي فلتر حتى لا تسقط من المتابعة
+      if (!p.stateExpenseEndDate) return true;
       const d = new Date(p.stateExpenseEndDate + 'T00:00:00');
       if (fromDate && d < new Date(fromDate + 'T00:00:00')) return false;
       if (toDate && d > new Date(toDate + 'T23:59:59')) return false;
