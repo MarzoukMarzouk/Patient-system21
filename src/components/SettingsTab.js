@@ -18,8 +18,8 @@ export function getWeekStartDay() {
   return saved !== null ? parseInt(saved, 10) : 1;
 }
 
-export default function SettingsTab({ user }) {
-  const canEdit = true;
+export default function SettingsTab({ user, hasPerm }) {
+  const canEdit = user?.position === 'مدير' || (hasPerm ? hasPerm('settings', 'edit') : true);
   const [weekStart, setWeekStart] = useState(1);
   const [savedMsg, setSavedMsg] = useState(false);
 
