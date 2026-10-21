@@ -169,101 +169,137 @@ export function StateExpenseHeader({
   return (
     <div dir="rtl" className="mb-3">
       <style>{`
-        .se-search{width:100%;max-width:400px}
-        .se-tabs{width:100%}
-        @media(min-width:768px){
-          .se-search{width:220px}
-          .se-tabs{width:auto}
-          .se-tabs .nav-item{flex:0 0 auto}
+        .seh-container {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+        .seh-dates {
+          min-width: 260px;
+        }
+        .seh-search {
+          flex: 1 1 180px;
+          max-width: 280px;
+        }
+        @media (max-width: 767px) {
+          .seh-dates, .seh-search {
+            width: 100%;
+            max-width: 100%;
+          }
+          .seh-viewtabs {
+            width: 100%;
+          }
+          .seh-viewtabs .nav {
+            width: 100%;
+          }
+          .seh-viewtabs .nav-item {
+            flex: 1;
+          }
+          .seh-viewtabs .nav-link {
+            width: 100%;
+            text-align: center;
+          }
         }
       `}</style>
 
-      {/* شريط علوي: تابين (الكل / أسبوع) مع التنقل في الأسابيع + تابين (الهاتف / الويندوز) */}
-      <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-        <div className="d-flex align-items-center gap-2 flex-wrap">
-          <ul className="nav nav-pills bg-light p-1 rounded border shadow-sm">
-            <li className="nav-item">
-              <button
-                type="button"
-                className={`nav-link py-1 px-3 ${filterType === 'all' ? 'active shadow-sm' : ''}`}
-                onClick={() => handleTabChange('all')}
-              >
-                الكل
-              </button>
-            </li>
-            <li className="nav-item">
-              <button
-                type="button"
-                className={`nav-link py-1 px-3 ${filterType === 'week' ? 'active shadow-sm' : ''}`}
-                onClick={() => handleTabChange('week')}
-              >
-                <i className="bi bi-calendar-week ms-1"></i>
-                أسبوع
-              </button>
-            </li>
-          </ul>
-
-          {filterType === 'week' && (
-            <div className="d-flex align-items-center gap-1 bg-white border rounded px-2 py-1 shadow-sm">
-              <button
-                className="btn btn-sm btn-outline-secondary py-0 px-2"
-                title="الأسبوع السابق"
-                onClick={() => setWeekOffset(prev => (prev || 0) - 1)}
-              >
-                <i className="bi bi-chevron-right"></i>
-              </button>
-              <span className="small fw-bold px-1 text-primary" style={{ minWidth: '170px', textAlign: 'center' }}>
-                {weekOffset === 0 ? 'الأسبوع الحالي: ' : weekOffset > 0 ? `بعد +${weekOffset} أسبوع: ` : `قبل ${Math.abs(weekOffset)} أسبوع: `}
-                {weekRange.label}
-              </span>
-              <button
-                className="btn btn-sm btn-outline-secondary py-0 px-2"
-                title="الأسبوع التالي"
-                onClick={() => setWeekOffset(prev => (prev || 0) + 1)}
-              >
-                <i className="bi bi-chevron-left"></i>
-              </button>
-              {weekOffset !== 0 && (
-                <button
-                  className="btn btn-sm btn-link text-decoration-none p-0 px-1 small text-muted"
-                  onClick={() => setWeekOffset(0)}
-                  title="العودة للأسبوع الحالي"
-                >
-                  (الحالي)
-                </button>
-              )}
-            </div>
-          )}
+      <div className="seh-container">
+        {/* 1. تاب الكل / أسبوع */}
+        <div className="btn-group shadow-sm" role="group">
+          <button
+            type="button"
+            className={`btn btn-sm ${filterType === 'all' ? 'btn-primary fw-bold' : 'btn-outline-primary bg-white'}`}
+            onClick={() => handleTabChange('all')}
+          >
+            الكل
+          </button>
+          <button
+            type="button"
+            className={`btn btn-sm ${filterType === 'week' ? 'btn-primary fw-bold' : 'btn-outline-primary bg-white'}`}
+            onClick={() => handleTabChange('week')}
+          >
+            <i className="bi bi-calendar-week ms-1"></i>
+            أسبوع
+          </button>
         </div>
 
-        <ViewTabs mode={viewMode} setMode={setViewMode} />
-      </div>
+        {/* 2. تنقل الأسابيع إن كان مفعل أسبوع */}
+        {filterType === 'week' && (
+          <div className="d-flex align-items-center gap-1 bg-white border rounded px-2 py-1 shadow-sm">
+            <button
+              className="btn btn-sm btn-outline-secondary py-0 px-2 border-0"
+              title="الأسبوع السابق"
+              onClick={() => setWeekOffset(prev => (prev || 0) - 1)}
+            >
+              <i className="bi bi-chevron-right"></i>
+            </button>
+            <span className="small fw-bold px-1 text-primary text-nowrap">
+              {weekOffset === 0 ? '' : weekOffset > 0 ? `(+${weekOffset}) ` : `(${weekOffset}) `}
+              {weekRange.label}
+            </span>
+            <button
+              className="btn btn-sm btn-outline-secondary py-0 px-2 border-0"
+              title="الأسبوع التالي"
+              onClick={() => setWeekOffset(prev => (prev || 0) + 1)}
+            >
+              <i className="bi bi-chevron-left"></i>
+            </button>
+            {weekOffset !== 0 && (
+              <button
+                className="btn btn-sm btn-link p-0 px-1 small text-muted text-decoration-none"
+                onClick={() => setWeekOffset(0)}
+              >
+                (الحالي)
+              </button>
+            )}
+          </div>
+        )}
 
-      {/* سطر البحث وحقول التاريخ اليدوية إذا رغب المستخدم في تعديلها */}
-      <div className="d-flex align-items-center flex-wrap gap-2 justify-content-start">
-        <div className="se-search d-flex align-items-center justify-content-between gap-1 bg-white border rounded px-2 py-1 shadow-sm" style={{ minHeight: '36px' }}>
+        {/* 3. من - إلى */}
+        <div className="seh-dates d-flex align-items-center justify-content-between gap-1 bg-white border rounded px-2 py-1 shadow-sm" style={{ minHeight: '36px' }}>
           <div className="d-flex align-items-center gap-1">
             <i className="bi bi-calendar3 text-muted"></i>
             <label className="small text-muted mb-0 me-1">من</label>
-            <DateField style={{ flex: 1, minWidth: '70px' }} value={fromDate} onChange={setFromDate} />
+            <DateField style={{ minWidth: '75px' }} value={fromDate} onChange={setFromDate} />
           </div>
           <span className="text-muted mx-1">—</span>
           <div className="d-flex align-items-center gap-1">
             <label className="small text-muted mb-0">إلى</label>
-            <DateField style={{ flex: 1, minWidth: '70px' }} value={toDate} onChange={setToDate} />
+            <DateField style={{ minWidth: '75px' }} value={toDate} onChange={setToDate} />
           </div>
         </div>
 
-        {copyMsg && <span className="text-success small fw-bold">{copyMsg}</span>}
-
-        <div className="se-search">
+        {/* 4. حقل البحث */}
+        <div className="seh-search">
           <input
             type="text"
             className="form-control form-control-sm"
-            placeholder="بحث بالاسم أو الملف..."
+            placeholder="بحث..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
+        </div>
+
+        {copyMsg && <span className="text-success small fw-bold text-nowrap">{copyMsg}</span>}
+
+        {/* 5. تابين الهاتف / الويندوز بجانبهم مباشرة */}
+        <div className="seh-viewtabs ms-auto">
+          <div className="btn-group shadow-sm" role="group">
+            <button
+              type="button"
+              className={`btn btn-sm ${viewMode === 'compact' ? 'btn-primary fw-bold' : 'btn-outline-primary bg-white'}`}
+              onClick={() => setViewMode('compact')}
+            >
+              الهاتف
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm ${viewMode === 'full' ? 'btn-primary fw-bold' : 'btn-outline-primary bg-white'}`}
+              onClick={() => setViewMode('full')}
+            >
+              الويندوز
+            </button>
+          </div>
         </div>
       </div>
     </div>
