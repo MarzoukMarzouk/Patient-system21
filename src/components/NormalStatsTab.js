@@ -34,7 +34,7 @@ export default function NormalStatsTab({ patients, hasPerm }) {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr><td className="fw-bold"><i className="bi bi-hospital ms-2 text-primary"></i>القسم</td><td className="text-center fw-bold text-primary fs-5">25</td></tr>
+                  <tr><td className="fw-bold"><i className="bi bi-hospital ms-2 text-primary"></i>القسم</td><td className="text-center fw-bold text-primary fs-5">21</td></tr>
                   <tr><td className="fw-bold"><i className="bi bi-people ms-2 text-success"></i>عدد المرضى</td><td className="text-center fw-bold text-success fs-5">{stats.total}</td></tr>
                   <tr><td className="fw-bold"><i className="bi bi-clock ms-2 text-info"></i>تحت 50 سنة</td><td className="text-center fw-bold fs-5">{patients.filter(p => p.ageClassification === 'تحت 50 عام').length}</td></tr>
                   <tr><td className="fw-bold"><i className="bi bi-person-arms-up ms-2 text-info"></i>50 سنة وأكثر</td><td className="text-center fw-bold fs-5">{patients.filter(p => p.ageClassification === 'فوق 50 عام').length}</td></tr>

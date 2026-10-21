@@ -93,7 +93,12 @@ export default function Dashboard({ user, patients, exits, onLogout, hasPerm, lo
     <div>
       <nav className="navbar navbar-dark bg-primary py-2 d-print-none">
         <div className="container-fluid">
-          <span className="navbar-brand mb-0 h6">نظام إدارة المرضى</span>
+          <span className="navbar-brand mb-0 h6 d-flex align-items-center gap-2">
+            <span className="d-inline-flex align-items-center justify-content-center bg-white text-primary rounded-circle shadow-sm" style={{ width: '28px', height: '28px', fontSize: '15px' }}>
+              <i className="bi bi-heart-pulse-fill"></i>
+            </span>
+            <span>نظام إدارة المرضى</span>
+          </span>
           <div className="d-flex align-items-center gap-2">
             <span className="navbar-text me-2 small d-none d-sm-inline">
               مرحباً، {user.name}

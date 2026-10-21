@@ -1,5 +1,16 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="32" height="32" rx="16" fill="#2980b9"/>
-<path d="M14 10h4v4h4v4h-4v4h-4v-4h-4v-4h4v-4z" fill="white"/>
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="medGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0d6efd" />
+      <stop offset="100%" stop-color="#0a58ca" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#medGrad)"/>
+  <!-- Shield/Care outline & Cross with Pulse -->
+  <path d="M32 10C32 10 46 13 48 24C50 36 39 49 32 54C25 49 14 36 16 24C18 13 32 10 32 10Z" fill="white" fill-opacity="0.16"/>
+  <!-- Modern medical cross with rounded corners -->
+  <rect x="28" y="19" width="8" height="26" rx="4" fill="white"/>
+  <rect x="19" y="28" width="26" height="8" rx="4" fill="white"/>
+  <!-- Heartbeat ECG line accent in middle -->
+  <path d="M22 32H27L29.5 25L34.5 39L37 32H42" stroke="#0d6efd" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
