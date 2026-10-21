@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import * as API from '@/lib/api';
+import StateExpenseTable, { ViewTabs, useViewMode } from './StateExpenseTable';
 
 export default function StateExpenseFollowUpTab({ patients, hasPerm, loadPatients }) {
   const [search, setSearch] = useState('');
   // الفلتر الافتراضي: كل الحالات اللي تاريخ انتهائها فات أو فاضي (لا حاجة لأزرار اختيار)
   const [copyMsg, setCopyMsg] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [viewMode, setViewMode] = useViewMode();
 
   const handleFieldChange = async (id, field, value) => {
     try {
@@ -68,66 +72,37 @@ export default function StateExpenseFollowUpTab({ patients, hasPerm, loadPatient
       const q = search.toLowerCase();
       return (p.patientName || '').toLowerCase().includes(q) || String(p.fileNumber || '').includes(q);
     })
+    .filter(p => {
+      // فلتر نطاق التاريخ (من/إلى) على تاريخ النهاية
+      if (!fromDate && !toDate) return true;
+      if (!p.stateExpenseEndDate) return false;
+      const d = new Date(p.stateExpenseEndDate + 'T00:00:00');
+      if (fromDate && d < new Date(fromDate + 'T00:00:00')) return false;
+      if (toDate && d > new Date(toDate + 'T23:59:59')) return false;
+      return true;
+    })
     .sort((a, b) => parseInt(a.fileNumber || 0) - parseInt(b.fileNumber || 0));
 
   return (
     <div>
-      <div className="d-flex justify-content-start align-items-center mb-2 flex-wrap gap-2">
-        <h5 className="mb-0 ms-3">متابعة نفقة الدولة</h5>
-        <div className="d-flex gap-2 align-items-center">
-          {copyMsg && <span className="text-success small">{copyMsg}</span>}
-          <input type="text" className="form-control form-control-sm" placeholder="بحث..." value={search}
-            onChange={e => setSearch(e.target.value)} style={{ maxWidth: 250 }} />
+      <div dir="rtl" className="d-flex align-items-center mb-2 flex-wrap gap-2 justify-content-start">
+        <h5 className="mb-0 ms-3 w-100">متابعة نفقة الدولة</h5>
+        <div className="d-flex align-items-center gap-1 bg-white border rounded px-2 py-1 shadow-sm" style={{ minHeight: '36px' }}>
+          <i className="bi bi-calendar3 text-muted"></i>
+          <label className="small text-muted mb-0 me-1">من</label>
+          <input type="date" className="form-control form-control-sm border-0 bg-transparent p-0" style={{ width: '130px', boxShadow: 'none' }} value={fromDate} onChange={e => setFromDate(e.target.value)} lang="en-GB" />
+          <span className="text-muted mx-1">—</span>
+          <label className="small text-muted mb-0">إلى</label>
+          <input type="date" className="form-control form-control-sm border-0 bg-transparent p-0" style={{ width: '130px', boxShadow: 'none' }} value={toDate} onChange={e => setToDate(e.target.value)} lang="en-GB" />
+        </div>
+        {copyMsg && <span className="text-success small">{copyMsg}</span>}
+        <div className="w-100" style={{ maxWidth: 400 }}>
+          <input type="text" className="form-control form-control-sm" placeholder="بحث..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
       </div>
 
-
-
-      <div className="table-responsive">
-        <table className="table table-hover table-striped align-middle" style={{ whiteSpace: 'nowrap' }}>
-          <thead>
-            <tr>
-              <th>الملف</th><th>الاسم</th><th>الرقم القومي</th>
-              <th>تاريخ النهاية</th><th></th><th>ملاحظات</th>
-            </tr>
-          </thead>
-          <tbody>
-            {displayList.map(p => (
-              <tr key={p.id}>
-                <td>{p.fileNumber}</td>
-                <td>{p.patientName}</td>
-                <td>
-                  <div className="d-flex align-items-center gap-1">
-                    <button className="btn btn-outline-primary px-3 py-2 fs-5" onClick={() => handleCopy(p.id)} title="نسخ">
-                      <i className="bi bi-clipboard fs-4"></i>
-                    </button>
-                    {p.nationalId}
-                  </div>
-                </td>
-                <td>
-                  <input type="date" className="form-control form-control-sm"
-                    value={p.stateExpenseEndDate || ''}
-                    onChange={e => handleFieldChange(p.id, 'stateExpenseEndDate', e.target.value)}
-                    disabled={!hasPerm('state_expense_follow_up', 'edit')} />
-                </td>
-                <td>
-                  {hasPerm('state_expense_follow_up', 'edit') && (
-                    <button className="btn btn-sm btn-outline-success" title="تجديد +30 يوم" onClick={() => handleRenew(p.id)}>
-                      <i className="bi bi-arrow-repeat"></i>
-                    </button>
-                  )}
-                </td>
-                <td>
-                  <input type="text" className="form-control form-control-sm"
-                    value={p.stateExpenseNotes || ''}
-                    onChange={e => handleFieldChange(p.id, 'stateExpenseNotes', e.target.value)}
-                    disabled={!hasPerm('state_expense_follow_up', 'edit')} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <ViewTabs mode={viewMode} setMode={setViewMode} />
+      <StateExpenseTable list={displayList} mode={viewMode} canEdit={hasPerm('state_expense_follow_up', 'edit')} onChange={handleFieldChange} onCopy={handleCopy} onRenew={handleRenew} />
     </div>
   );
 }

@@ -1,0 +1,106 @@
+import { useState, useEffect } from 'react';
+
+// عرض مشترك لتبويبي نفقة الدولة ومتابعة نفقة الدولة
+// العرض الحالي (كامل) أو العرض المختصر (الافتراضي على الهاتف)
+export function useViewMode() {
+  const [mode, setMode] = useState('full');
+  useEffect(() => {
+    if (window.innerWidth < 768) setMode('compact');
+  }, []);
+  return [mode, setMode];
+}
+
+export function ViewTabs({ mode, setMode }) {
+  return (
+    <ul className="nav nav-pills nav-fill mb-2 w-100">
+      <li className="nav-item">
+        <button type="button" className={`nav-link py-1 ${mode === 'compact' ? 'active' : ''}`} onClick={() => setMode('compact')}>العرض المختصر</button>
+      </li>
+      <li className="nav-item">
+        <button type="button" className={`nav-link py-1 ${mode === 'full' ? 'active' : ''}`} onClick={() => setMode('full')}>العرض الحالي</button>
+      </li>
+    </ul>
+  );
+}
+
+export default function StateExpenseTable({ list, mode, canEdit, onChange, onCopy, onRenew }) {
+  const copyBtn = (id) => (
+    <button className="btn btn-sm btn-outline-primary" onClick={() => onCopy(id)} title="نسخ">
+      <i className="bi bi-clipboard"></i>
+    </button>
+  );
+  const renewBtn = (id) => canEdit && (
+    <button className="btn btn-sm btn-outline-success" title="تجديد +30 يوم" onClick={() => onRenew(id)}>
+      <i className="bi bi-arrow-repeat"></i>
+    </button>
+  );
+  const dateInput = (p) => (
+    <input type="date" className="form-control form-control-sm" style={{ minWidth: 135 }}
+      value={p.stateExpenseEndDate || ''}
+      onChange={e => onChange(p.id, 'stateExpenseEndDate', e.target.value)}
+      disabled={!canEdit} />
+  );
+  const notesInput = (p) => (
+    <input type="text" className="form-control form-control-sm" style={{ minWidth: 120 }}
+      value={p.stateExpenseNotes || ''}
+      onChange={e => onChange(p.id, 'stateExpenseNotes', e.target.value)}
+      disabled={!canEdit} />
+  );
+
+  if (mode === 'compact') {
+    // الملف | زر النسخ | الاسم | التاريخ | زر التجديد | الملاحظات
+    return (
+      <div className="table-responsive">
+        <table className="table table-hover table-striped align-middle mb-0" style={{ whiteSpace: 'nowrap' }}>
+          <thead>
+            <tr>
+              <th>الملف</th><th></th><th>الاسم</th><th>التاريخ</th><th></th><th>ملاحظات</th>
+            </tr>
+          </thead>
+          <tbody>
+            {list.map(p => (
+              <tr key={p.id}>
+                <td>{p.fileNumber}</td>
+                <td>{copyBtn(p.id)}</td>
+                <td>{p.patientName}</td>
+                <td>{dateInput(p)}</td>
+                <td>{renewBtn(p.id)}</td>
+                <td>{notesInput(p)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  return (
+    <div className="table-responsive">
+      <table className="table table-hover table-striped align-middle" style={{ whiteSpace: 'nowrap' }}>
+        <thead>
+          <tr>
+            <th>الملف</th><th>الاسم</th><th>الرقم القومي</th>
+            <th>تاريخ النهاية</th><th></th><th>ملاحظات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {list.map(p => (
+            <tr key={p.id}>
+              <td>{p.fileNumber}</td>
+              <td>{p.patientName}</td>
+              <td>
+                <div className="d-flex align-items-center gap-2">
+                  {copyBtn(p.id)}
+                  {p.nationalId}
+                </div>
+              </td>
+              <td>{dateInput(p)}</td>
+              <td>{renewBtn(p.id)}</td>
+              <td>{notesInput(p)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
