@@ -55,14 +55,13 @@ export default function StateExpenseTable({ list, mode, canEdit, onChange, onCop
         <table className="table table-sm table-hover table-striped align-middle mb-0 state-compact w-auto" style={{ whiteSpace: 'nowrap' }}>
           <thead>
             <tr>
-              <th>الملف</th><th></th><th>الاسم</th><th>التاريخ</th><th></th><th>ملاحظات</th>
+              <th colSpan={2}>الملف</th><th>الاسم</th><th>التاريخ</th><th></th><th>ملاحظات</th>
             </tr>
           </thead>
           <tbody>
             {list.map(p => (
               <tr key={p.id}>
-                <td>{p.fileNumber}</td>
-                <td>{copyBtn(p.id)}</td>
+                <td colSpan={2}><div className="d-flex align-items-center gap-1"><span style={{ minWidth: 18, textAlign: 'center' }}>{p.fileNumber}</span>{copyBtn(p.id)}</div></td>
                 <td>{(p.patientName || '').trim().split(/\s+/).slice(0, 3).join(' ')}</td>
                 <td>{dateInput(p)}</td>
                 <td>{renewBtn(p.id)}</td>
